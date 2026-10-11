@@ -1,0 +1,60 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:        # botón "Run workflow" manual
+  push:
+    tags:
+      - "v*"                 # también al crear un tag tipo v1.1.0
+
+permissions:
+  contents: write           # necesario solo para publicar el Release
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: MuToolsCode/package-lock.json
+
+      - name: Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache de Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: MuToolsCode/src-tauri
+
+      - name: Dependencias del frontend
+        working-directory: MuToolsCode
+        run: npm ci
+
+      - name: Compilar Tauri (exe + NSIS + MSI)
+        working-directory: MuToolsCode
+        run: npm run tauri build
+
+      - name: Subir artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: MuTools-Windows
+          if-no-files-found: error
+          path: |
+            MuToolsCode/src-tauri/target/release/mutools.exe
+            MuToolsCode/src-tauri/target/release/bundle/nsis/*.exe
+            MuToolsCode/src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Publicar Release (solo con tags v*)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            MuToolsCode/src-tauri/target/release/mutools.exe
+            MuToolsCode/src-tauri/target/release/bundle/nsis/*.exe
+            MuToolsCode/src-tauri/target/release/bundle/msi/*.msi
