@@ -1,4 +1,4 @@
-// 优化页面
+// Página de optimización
 import { showToast } from "./toast.js";
 import { addLog } from "./logger.js";
 const { invoke } = window.__TAURI__.core;
@@ -6,147 +6,147 @@ const { invoke } = window.__TAURI__.core;
 const optimizeGroups = [
   {
     id: "startup-ad",
-    title: "开屏广告",
+    title: "Anuncio de inicio",
     items: [
       {
         id: "startup-image",
-        title: "修改startupImage文件夹",
+        title: "Modificar la carpeta startupImage",
         command: "disable_startup_image",
         undoCommand: "restore_startup_image",
-        pros: ["取消开屏广告"],
-        cons: ["无法显示MuMu活动"],
-        notes: ["可以通过游戏中心进入活动"],
+        pros: ["Elimina el anuncio de inicio"],
+        cons: ["No se pueden mostrar los eventos de MuMu"],
+        notes: ["Se puede acceder a los eventos desde el centro de juegos"],
       },
       {
         id: "hosts-update",
-        title: "host代理127",
+        title: "Proxy de host a 127",
         command: "block_update_domains",
         undoCommand: "unblock_update_domains",
-        pros: ["取消消息中心、模拟器更新"],
-        cons: ["无法使用官网下载更新、在线安装包"],
-        notes: ["不会影响模拟器内部网络环境"],
+        pros: ["Elimina las actualizaciones del centro de mensajes y del emulador"],
+        cons: ["No se pueden usar las actualizaciones descargadas del sitio web ni el instalador en línea"],
+        notes: ["No afecta al entorno de red interno del emulador"],
       },
     ],
   },
   {
     id: "message‌-ad",
-    title: "消息中心广告",
+    title: "Anuncios del centro de mensajes",
     items: [
       {
         id: "hosts-update",
-        title: "host代理127",
+        title: "Proxy de host a 127",
         command: "block_update_domains",
         undoCommand: "unblock_update_domains",
-        pros: ["取消消息中心、模拟器更新"],
-        cons: ["无法使用官网下载更新、在线安装包"],
-        notes: ["不会影响模拟器内部网络环境"],
+        pros: ["Elimina las actualizaciones del centro de mensajes y del emulador"],
+        cons: ["No se pueden usar las actualizaciones descargadas del sitio web ni el instalador en línea"],
+        notes: ["No afecta al entorno de red interno del emulador"],
       },
       {
         id: "firewall-message",
-        title: "[废弃]防火墙禁用连接",
+        title: "[Obsoleto] Bloquear conexiones con el firewall",
         command: "add_firewall_rule_1",
         undoCommand: "remove_firewall_rule_1",
-        pros: ["取消消息中心广告"],
-        cons: ["无法使用游戏中心部分功能"],
-        notes: ["仅禁用MuMuPlayer.exe连接广告服务器IP"],
+        pros: ["Elimina los anuncios del centro de mensajes"],
+        cons: ["No se pueden usar algunas funciones del centro de juegos"],
+        notes: ["Solo bloquea las conexiones de MuMuPlayer.exe a las IP de los servidores de anuncios"],
       },
     ],
   },
   {
     id: "desktop-ad",
-    title: "模拟器内桌面广告",
+    title: "Anuncios del escritorio del emulador",
     items: [
       {
         id: "data-package",
-        title: "使用data包",
+        title: "Usar el paquete data",
         command: "import_data_package",
         undoCommand: "undo_import_data_package",
         needsResource: "data",
-        pros: ["取消模拟器桌面广告"],
-        cons: ["多开应用的图标无法显示在桌面，可通多应用多开软件进入"],
+        pros: ["Elimina los anuncios del escritorio del emulador"],
+        cons: ["Los iconos de las aplicaciones multiinstancia no se muestran en el escritorio; se puede acceder desde el software de multiapertura"],
         notes: [],
       },
       {
         id: "firewall-desktop",
-        title: "[废弃]防火墙禁用连接",
+        title: "[Obsoleto] Bloquear conexiones con el firewall",
         command: "add_firewall_rule_2",
         undoCommand: "remove_firewall_rule_2",
-        pros: ["取消模拟器桌面广告、内置的游戏中心"],
-        cons: ["无法使用谷歌安装器、游戏加速、虚拟定位、获取默认键位"],
-        notes: ["仅禁用VMMHeadless软件连接，对于获取android_id异常，可以提前启动模拟器，并尝试获取android_id"],
+        pros: ["Elimina los anuncios del escritorio del emulador y el centro de juegos integrado"],
+        cons: ["No se pueden usar el instalador de Google, la aceleración de juegos, la ubicación virtual ni la obtención de teclas predeterminadas"],
+        notes: ["Solo bloquea las conexiones del software VMMHeadless; si falla la obtención del android_id, se puede iniciar el emulador de antemano e intentar obtener el android_id"],
       },
     ],
   },
   {
     id: "block-update",
-    title: "禁止更新",
+    title: "Bloquear las actualizaciones",
     items: [
       {
         id: "hosts-update-2",
-        title: "host代理127",
+        title: "Proxy de host a 127",
         command: "block_update_domains",
         undoCommand: "unblock_update_domains",
-        pros: ["取消消息中心、模拟器更新"],
-        cons: ["无法使用官网下载更新、在线安装包"],
-        notes: ["不会影响模拟器内部网络环境"],
+        pros: ["Elimina las actualizaciones del centro de mensajes y del emulador"],
+        cons: ["No se pueden usar las actualizaciones descargadas del sitio web ni el instalador en línea"],
+        notes: ["No afecta al entorno de red interno del emulador"],
       },
       {
         id: "disable-updater",
-        title: "修改更新文件",
+        title: "Modificar el archivo de actualización",
         command: "disable_updater",
         undoCommand: "restore_updater",
-        pros: ["禁用模拟器更新"],
-        cons: ["无法体验新版"],
-        notes: ["把MuMuPlayerUpdater.exe修改为MuMuPlayerUpdater.exe.bak"],
+        pros: ["Bloquea las actualizaciones del emulador"],
+        cons: ["No se puede probar la versión nueva"],
+        notes: ["Cambia MuMuPlayerUpdater.exe a MuMuPlayerUpdater.exe.bak"],
       },
     ],
   },
   {
     id: "special-edition",
-    title: "仿专版/海外版修改",
+    title: "Conversión a modo imitación Premium / versión internacional",
     items: [
       {
         id: "overlay-4x",
-        title: "[4.x]仿专版修改",
+        title: "[4.x] Conversión a modo imitación Premium",
         command: "apply_overlay_package",
         undoCommand: "undo_overlay_package",
         needsResource: "overlay",
-        pros: ["修改为专版，解锁了专版模拟器功能限制，体积小，功能强大，去除了搜索栏"],
-        cons: ["可能对旧版data数据有兼容性问题，需要重新新建多开"],
-        notes: ["提取与修改专版模拟器的overlay文件制成，overlay修改对所有多开有效"],
+        pros: ["Se convierte en modo imitación Premium: se eliminan las limitaciones de funciones del emulador de dicha edición, ocupa poco espacio y ofrece funciones potentes, además de quitar la barra de búsqueda"],
+        cons: ["Puede haber problemas de compatibilidad con datos antiguos del paquete data; es necesario crear de nuevo las instancias múltiples"],
+        notes: ["Creado a partir de la extracción y modificación de los archivos overlay del emulador de la edición Premium; la modificación del overlay se aplica a todas las instancias múltiples"],
       },
       {
         id: "fchannel-5x",
-        title: "[5.x][6.x]版本仿专版修改",
+        title: "[5.x][6.x] Conversión a modo imitación Premium",
         command: "apply_fchannel",
         undoCommand: "undo_fchannel",
-        pros: ["修改为专版，几乎不影响原版体验"],
+        pros: ["Se convierte en modo imitación Premium y apenas afecta a la experiencia de la versión original"],
         cons: [],
-        notes: ["修改安装配置信息，普通版仅修改此参数不会自动下载游戏"],
+        notes: ["Modifica la información de configuración de la instalación; en la versión normal, cambiar solo este parámetro no descarga juegos automáticamente"],
       },
       {
         id: "patch-vdi-overseas",
-        title: "[5.x][6.x]修改system.vdi",
+        title: "[5.x][6.x] Modificar system.vdi",
         command: "patch_system_vdi_overseas",
         undoCommand: "undo_patch_system_vdi_overseas",
-        pros: ["修改system.vdi添加海外版标识"],
-        cons: ["将会临时占用1-2G内存资源"],
-        notes: ["直接在system.vdi中修改build.prod"],
+        pros: ["Modifica system.vdi para añadir el identificador de versión internacional"],
+        cons: ["Ocupará temporalmente entre 1 y 2 GB de memoria"],
+        notes: ["Modifica build.prod directamente en system.vdi"],
       }
     ],
   },
   {
     id: "telemetry",
-    title: "MuMu遥测",
+    title: "Telemetría de MuMu",
     items: [
       {
         id: "block-report",
-        title: "全局代理127(修改host)",
+        title: "Proxy global a 127 (modificar hosts)",
         command: "block_report_domains",
         undoCommand: "unblock_report_domains",
-        pros: ["禁用MuMu遥测"],
-        cons: ["错误日志上报失败"],
-        notes: ["禁用范围包括但不限于MuMu12遥测"],
+        pros: ["Desactiva la telemetría de MuMu"],
+        cons: ["Falla el envío de registros de errores"],
+        notes: ["El bloqueo incluye, entre otros, la telemetría de MuMu 12"],
       },
     ],
   },
@@ -171,7 +171,7 @@ export function renderOptimizePage() {
     question.innerHTML = `
       <span>${group.title}</span>
       <div class="optimize-faq-right">
-        <span class="opt-group-count">${group.items.length} 项</span>
+        <span class="opt-group-count">${group.items.length} elementos</span>
         <span class="optimize-faq-arrow">▼</span>
       </div>
     `;
@@ -210,7 +210,7 @@ export function renderOptimizePage() {
         const select = document.createElement("select");
         select.className = "form-input opt-resource-select";
         select.dataset.itemId = item.id;
-        select.innerHTML = '<option value="">加载中...</option>';
+        select.innerHTML = '<option value="">Cargando...</option>';
         select.disabled = true;
         fileRow.appendChild(select);
         left.appendChild(fileRow);
@@ -281,11 +281,11 @@ async function loadOptimizeResources(item, fileRow) {
     const list = await invoke(cmd);
     select.innerHTML = "";
     if (!list || list.length === 0) {
-      select.innerHTML = '<option value="">未找到匹配的资源包</option>';
+      select.innerHTML = '<option value="">No se encontraron paquetes de recursos coincidentes</option>';
       select.disabled = true;
       return;
     }
-    select.innerHTML = '<option value="">请选择资源包...</option>';
+    select.innerHTML = '<option value="">Seleccione un paquete de recursos...</option>';
     list.forEach((pkg) => {
       const opt = document.createElement("option");
       opt.value = pkg.filePath;
@@ -304,9 +304,9 @@ async function loadOptimizeResources(item, fileRow) {
       }
     });
   } catch (e) {
-    select.innerHTML = '<option value="">加载失败</option>';
+    select.innerHTML = '<option value="">Error al cargar</option>';
     select.disabled = true;
-    addLog(`加载资源包列表失败: ${e}`);
+    addLog(`Error al cargar la lista de paquetes de recursos: ${e}`);
   }
 }
 
@@ -327,11 +327,11 @@ function getCheckedItems() {
 async function runOptimizeBatch(mode) {
   const checked = getCheckedItems();
   if (checked.length === 0) {
-    showToast("请至少勾选一项优化", "info");
+    showToast("Seleccione al menos una optimización", "info");
     return;
   }
 
-  const label = mode === "apply" ? "开始优化" : "开始撤销优化";
+  const label = mode === "apply" ? "Iniciar optimización" : "Iniciar reversión de la optimización";
   addLog(`========== ${label} ==========`);
   showToast(label, "info");
 
@@ -343,26 +343,26 @@ async function runOptimizeBatch(mode) {
     if (mode === "apply" && item.needsResource) {
       const filePath = optimizeFilePaths[item.id];
       if (!filePath) {
-        addLog(`跳过「${item.title}」：未选择资源包`);
-        showToast(`跳过「${item.title}」：未选择资源包`, "info");
+        addLog(`Se omite «${item.title}»: no se ha seleccionado ningún paquete de recursos`);
+        showToast(`Se omite «${item.title}»: no se ha seleccionado ningún paquete de recursos`, "info");
         continue;
       }
       args.path = filePath;
     }
 
     try {
-      addLog(`执行: ${item.title}`);
-      showToast(`正在执行: ${item.title}`, "info");
+      addLog(`Ejecutando: ${item.title}`);
+      showToast(`Ejecutando: ${item.title}`, "info");
       const result = await invoke(command, args);
-      addLog(`成功: ${result}`);
+      addLog(`Correcto: ${result}`);
     } catch (e) {
-      addLog(`失败: ${item.title} ${e}`);
-      showToast(`${item.title} 失败: ${e}`, "error");
+      addLog(`Error: ${item.title} ${e}`);
+      showToast(`${item.title}: error ${e}`, "error");
     }
   }
 
-  addLog(`========== ${label} 完成 ==========`);
-  showToast(`${label} 完成`, "success");
+  addLog(`========== ${label} finalizado ==========`);
+  showToast(`${label} finalizado`, "success");
 }
 
 export function initOptimizePage() {

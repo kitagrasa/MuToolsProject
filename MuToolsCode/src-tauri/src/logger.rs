@@ -38,9 +38,9 @@ pub fn log_action(state: tauri::State<AppState>, message: String) -> Result<(), 
         .create(true)
         .append(true)
         .open(&log_file)
-        .map_err(|e| format!("无法打开日志文件: {}", e))?;
+        .map_err(|e| format!("No se pudo abrir el archivo de registro: {}", e))?;
     file.write_all(log_line.as_bytes())
-        .map_err(|e| format!("无法写入日志: {}", e))?;
+        .map_err(|e| format!("No se pudo escribir en el registro: {}", e))?;
     Ok(())
 }
 
@@ -50,7 +50,7 @@ pub fn get_logs(state: tauri::State<AppState>) -> Result<Vec<String>, String> {
     if !log_file.exists() {
         return Ok(Vec::new());
     }
-    let content = fs::read_to_string(&log_file).map_err(|e| format!("无法读取日志: {}", e))?;
+    let content = fs::read_to_string(&log_file).map_err(|e| format!("No se pudo leer el registro: {}", e))?;
     let lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
     Ok(lines)
 }
@@ -58,6 +58,6 @@ pub fn get_logs(state: tauri::State<AppState>) -> Result<Vec<String>, String> {
 #[tauri::command]
 pub fn clear_logs(state: tauri::State<AppState>) -> Result<(), String> {
     let log_file = state.log_dir.join("app.log");
-    fs::write(&log_file, "").map_err(|e| format!("无法清空日志: {}", e))?;
+    fs::write(&log_file, "").map_err(|e| format!("No se pudo vaciar el registro: {}", e))?;
     Ok(())
 }

@@ -1,4 +1,4 @@
-﻿use std::fs;
+use std::fs;
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -16,7 +16,7 @@ use config::AppState;
 use logger::FileLogger;
 
 pub fn run() {
-    // 读取配置提权检查
+    // Lee la configuración de la comprobacion de elevación de privilegios
     let config = read_config();
     elevation::check_and_elevate(config.admin_elevation);
 
@@ -28,22 +28,22 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(move |app| {
-            fs::create_dir_all(&log_dir).expect("无法创建日志目录");
-            fs::create_dir_all(&resource_dir).expect("无法创建资源目录");
+            fs::create_dir_all(&log_dir).expect("No se puede crear la carpeta de registros");
+            fs::create_dir_all(&resource_dir).expect("No se puede crear la carpeta de recursos");
 
             let log_file_path = log_dir.join("app.log");
             let log_file = fs::OpenOptions::new()
                 .create(true)
                 .append(true)
                 .open(&log_file_path)
-                .expect("无法创建日志文件");
+                .expect("No se puede crear el archivo de registro");
 
             let logger = FileLogger {
                 file: Mutex::new(log_file),
             };
             log::set_boxed_logger(Box::new(logger))
                 .map(|()| log::set_max_level(log::LevelFilter::Info))
-                .expect("无法设置日志器");
+                .expect("No se puede configurar el registro");
 
             log::info!("MuTools OK!");
             log::info!("data_dir: {}", data_dir.display());

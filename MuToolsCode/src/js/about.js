@@ -1,4 +1,4 @@
-// 关于页面
+// Página Acerca de
 
 function initDisclaimerModal() {
   const overlay = document.getElementById("modal-disclaimer-overlay");
@@ -22,197 +22,197 @@ function initDisclaimerModal() {
   });
 }
 
-// 更新日志
+// Registro de cambios
 
 const CHANGELOG_DATA = [
   {
     version: "Tauri-v1.1.0",
     date: "2026-08-31",
     items: [
-      { text: "修复V6版本的startupImageDir优化", type: "fix" }
+      { text: "Corregida la optimización de startupImageDir en la versión V6", type: "fix" }
     ]
   },
   {
     version: "Tauri-v1.0.0",
     date: "2026-08-28",
     items: [
-      { text: "首个Tauri正式版发布", type: "plain" },
-      { text: "防火墙优化方案被废弃", type: "breaking" },
-      { text: "添加免责声明", type: "add" },
-      { text: "添加更新日志", type: "add" },
-      { text: "修复V6版本的system.vdi优化", type: "fix" },
-      { text: "修复防火墙优化项目的部分问题", type: "fix" },
-      { text: "调整优化列表分类", type: "opt" },
-      { text: "移除项目中死代码和无用资源", type: "opt" },
-      { text: "优化资源包管理界面布局", type: "opt" }
+      { text: "Publicada la primera versión estable de Tauri", type: "plain" },
+      { text: "Se descarta el método de optimización del cortafuegos", type: "breaking" },
+      { text: "Añadido el aviso legal", type: "add" },
+      { text: "Añadido el registro de cambios", type: "add" },
+      { text: "Corregida la optimización de system.vdi en la versión V6", type: "fix" },
+      { text: "Corregidos varios problemas del apartado de optimización del cortafuegos", type: "fix" },
+      { text: "Reajustada la clasificación de la lista de optimizaciones", type: "opt" },
+      { text: "Eliminado el código muerto y los recursos inservibles del proyecto", type: "opt" },
+      { text: "Optimizado el diseño de la interfaz de gestión de paquetes de recursos", type: "opt" }
     ]
   },
   {
     version: "Tauri-v0.1.0",
     date: "2026-08-25",
     items: [
-      { text: "首个Tauri预览版发布", type: "plain" },
-      { text: "全新GUI界面设计", type: "add" },
-      { text: "支持在线下载MuMu安装包", type: "add" },
-      { text: "支持MuMu12-V6版本", type: "add" },
-      { text: "添加MuMu帮助项目，便于查找文档和联系客服", type: "add" },
-      { text: "新增每日一句和小彩蛋", type: "add" }
+      { text: "Publicada la primera versión preliminar de Tauri", type: "plain" },
+      { text: "Diseño de interfaz gráfica completamente nuevo", type: "add" },
+      { text: "Permite descargar en línea el instalador de MuMu", type: "add" },
+      { text: "Compatible con la versión MuMu12-V6", type: "add" },
+      { text: "Añadido el apartado de ayuda de MuMu para consultar la documentación y contactar con soporte", type: "add" },
+      { text: "Añadidas la frase del día y algunas sorpresas ocultas", type: "add" }
     ]
   },
   {
     version: "Python-v5.4",
     date: "0000-00-00",
     items: [
-      { text: "最后一个Python版本", type: "plain" },
-      { text: "移除资源包MuMu远程控制插件", type: "breaking" },
-      { text: "移除了不再受支持的 备份多开Pro 功能", type: "breaking" },
-      { text: "资源包模块进行了调整，不再兼容之前版本！", type: "breaking" },
-      { text: "新增UU远控官网地址", type: "add" },
-      { text: "支持存储和加载资源包状态", type: "add" },
-      { text: "新增二维码扫描工具", type: "add" },
-      { text: "命令行支持自动加载配置文件", type: "add" },
-      { text: "资源管理界面显示优化", type: "opt" },
-      { text: "移除了部分无用的提示信息", type: "opt" },
-      { text: "MuMu多开管理操作界面优化", type: "opt" }
+      { text: "Última versión en Python", type: "plain" },
+      { text: "Eliminado el complemento de control remoto de MuMu del paquete de recursos", type: "breaking" },
+      { text: "Eliminada la función Copia de seguridad Multinstancia Pro, que ya no recibe soporte", type: "breaking" },
+      { text: "El módulo de paquetes de recursos ha cambiado y ya no es compatible con versiones anteriores.", type: "breaking" },
+      { text: "Añadida la dirección del sitio web oficial de UU Remote", type: "add" },
+      { text: "Permite guardar y cargar el estado de los paquetes de recursos", type: "add" },
+      { text: "Añadida una herramienta de escaneo de códigos QR", type: "add" },
+      { text: "La línea de comandos permite cargar automáticamente el archivo de configuración", type: "add" },
+      { text: "Optimizada la visualización de la interfaz de gestión de recursos", type: "opt" },
+      { text: "Eliminados algunos avisos innecesarios", type: "opt" },
+      { text: "Optimizada la interfaz de gestión multinstancia de MuMu", type: "opt" }
     ]
   },
   {
     version: "Python-v5.3",
     date: "0000-00-00",
     items: [
-      { text: "新增可选5.x仿专版优化渠道类型", type: "add" },
-      { text: "新增命令行-v参数", type: "add" },
-      { text: "新增修改host自动识别相同域名", type: "add" },
-      { text: "Mutools有自己的新图标了", type: "add" },
-      { text: "修复禁用遥测失败", type: "fix" },
-      { text: "修复日志权限错误", type: "fix" },
-      { text: "修复启动时路径检测错误", type: "fix" },
-      { text: "程序编译优化，提升性能", type: "opt" },
-      { text: "主界面视觉体验优化", type: "opt" },
-      { text: "选择优化界面操作体验优化，使用+-*标注", type: "opt" },
-      { text: "日志文件上限配置由修改为10MB 90d", type: "opt" },
-      { text: "MuMu12版本检测逻辑优化", type: "opt" },
-      { text: "调整未安装MuMu12显示警告", type: "opt" },
-      { text: "版本号显示调整", type: "opt" },
-      { text: "优化模块加载", type: "opt" }
+      { text: "Añadido el tipo de canal de optimización opcional modo imitación Premium para 5.x", type: "add" },
+      { text: "Añadido el parámetro -v a la línea de comandos", type: "add" },
+      { text: "Añadida la detección automática de dominios duplicados al modificar el archivo hosts", type: "add" },
+      { text: "MuTools ya tiene su propio icono nuevo", type: "add" },
+      { text: "Corregido el fallo al desactivar la telemetría", type: "fix" },
+      { text: "Corregido el error de permisos del registro", type: "fix" },
+      { text: "Corregido el error de detección de rutas al iniciar", type: "fix" },
+      { text: "Optimizada la compilación del programa para mejorar el rendimiento", type: "opt" },
+      { text: "Optimizada la experiencia visual de la interfaz principal", type: "opt" },
+      { text: "Optimizada la experiencia de uso de la pantalla de selección de optimizaciones, con marcas +-*", type: "opt" },
+      { text: "El límite configurado para los archivos de registro pasa a 10 MB / 90 d", type: "opt" },
+      { text: "Optimizada la lógica de detección de la versión de MuMu12", type: "opt" },
+      { text: "Ajustado el aviso que se muestra cuando MuMu12 no está instalado", type: "opt" },
+      { text: "Ajustada la visualización del número de versión", type: "opt" },
+      { text: "Optimizada la carga de módulos", type: "opt" }
     ]
   },
   {
     version: "Python-v5.2",
     date: "0000-00-00",
     items: [
-      { text: "新增system.vdi优化包", type: "add" },
-      { text: "支持自动更新", type: "add" },
-      { text: "新增关闭MuMu遥测优化项目", type: "add" },
-      { text: "新增更新后的更新提示", type: "add" },
-      { text: "更新了V5.0版本data优化包", type: "add" },
-      { text: "新增提示及日志SUCCESS类型", type: "add" },
-      { text: "修复部分情况下命令行字符串解码失败的问题", type: "fix" },
-      { text: "修复host更改成功后，意外的错误提示及日志", type: "fix" },
-      { text: "修复host恢复的一个提示错误", type: "fix" },
-      { text: "优化修改startupImageDir的提示信息", type: "opt" },
-      { text: "优化一键优化与一键撤销优化的选项", type: "opt" },
-      { text: "优化了更新日志输出显示", type: "opt" },
-      { text: "重写了保存设置的代码，提升性能", type: "opt" },
-      { text: "优化了输出信息及日志的检测顺序", type: "opt" },
-      { text: "精简了反调试代码", type: "opt" },
-      { text: "选择资源界面设置了更详细的错误提示", type: "opt" },
-      { text: "优化命令行参数识别读取效率", type: "opt" }
+      { text: "Añadido el paquete de optimización system.vdi", type: "add" },
+      { text: "Compatible con la actualización automática", type: "add" },
+      { text: "Añadida la opción de optimización para desactivar la telemetría de MuMu", type: "add" },
+      { text: "Añadido el aviso de actualización tras actualizar", type: "add" },
+      { text: "Actualizado el paquete de optimización data de la versión V5.0", type: "add" },
+      { text: "Añadido el tipo SUCCESS para los avisos y los registros", type: "add" },
+      { text: "Corregido el fallo de decodificación de cadenas de la línea de comandos en algunos casos", type: "fix" },
+      { text: "Corregidos los avisos y registros de error inesperados tras modificar el archivo hosts correctamente", type: "fix" },
+      { text: "Corregido un aviso erróneo al restaurar el archivo hosts", type: "fix" },
+      { text: "Optimizados los avisos al modificar startupImageDir", type: "opt" },
+      { text: "Optimizadas las opciones de optimización con un clic y de revertir la optimización con un clic", type: "opt" },
+      { text: "Optimizada la visualización de la salida del registro de cambios", type: "opt" },
+      { text: "Reescrito el código de guardado de los ajustes para mejorar el rendimiento", type: "opt" },
+      { text: "Optimizado el orden de detección de los mensajes de salida y los registros", type: "opt" },
+      { text: "Simplificado el código antidepuración", type: "opt" },
+      { text: "La pantalla de selección de recursos ahora muestra avisos de error más detallados", type: "opt" },
+      { text: "Optimizada la eficiencia de reconocimiento y lectura de los parámetros de la línea de comandos", type: "opt" }
     ]
   },
   {
     version: "Python-v5.1",
     date: "0000-00-00",
     items: [
-      { text: "新增GUI弹窗提示", type: "add" },
-      { text: "新增MuMu国际版下载链接", type: "add" },
-      { text: "命令行支持执行优化", type: "add" },
-      { text: "支持bitWidth自动获取", type: "add" },
-      { text: "修复序号9不能正常查看更新日志的问题", type: "fix" },
-      { text: "修复了在自动创建路径中的异常崩溃", type: "fix" },
-      { text: "修复在未安装模拟器前导致的无限递归检测版本号", type: "fix" },
-      { text: "命令行参数错误将会提示而不是正常启动", type: "opt" },
-      { text: "优化了用户协议", type: "opt" }
+      { text: "Añadidos los avisos emergentes de la interfaz gráfica", type: "add" },
+      { text: "Añadido el enlace de descarga de la versión internacional de MuMu", type: "add" },
+      { text: "La línea de comandos permite ejecutar optimizaciones", type: "add" },
+      { text: "Compatible con la obtención automática de bitWidth", type: "add" },
+      { text: "Corregido el problema por el que la opción 9 no permitía ver el registro de cambios", type: "fix" },
+      { text: "Corregido el cierre inesperado al crear rutas de forma automática", type: "fix" },
+      { text: "Corregida la detección recursiva infinita del número de versión cuando el emulador aún no está instalado", type: "fix" },
+      { text: "Si los parámetros de la línea de comandos son incorrectos se mostrará un aviso en lugar de iniciarse con normalidad", type: "opt" },
+      { text: "Optimizado el acuerdo de usuario", type: "opt" }
     ]
   },
   {
     version: "Python-v5.0",
     date: "0000-00-00",
     items: [
-      { text: "新增对MuMuPlayerUpdater.exe的自动修改", type: "add" },
-      { text: "新增MuMu5.x版本优化", type: "add" },
-      { text: "新增MuMu历史版本官网", type: "add" },
-      { text: "新增命令行资源包提取工具", type: "add" },
-      { text: "新增自动检查更新", type: "add" },
-      { text: "新增检测项目vbox-env", type: "add" },
-      { text: "新增32位版本", type: "add" },
-      { text: "更新5.2和5.5离线安装包", type: "add" },
-      { text: "更新5.0.1和5.0.2的在线安装包", type: "add" },
-      { text: "更新UU远程软件版本", type: "add" },
-      { text: "更新检测工具ColaBoxChecker为MuMuChecker", type: "add" },
-      { text: "新增检测MuMu模拟器版本", type: "add" },
-      { text: "获取版本号支持读取配置文件", type: "add" },
-      { text: "融合Mupro测试版功能", type: "add" },
-      { text: "新增详细日志功能", type: "add" },
-      { text: "开放DEV调试，命令行支持启用调试模式", type: "add" },
-      { text: "修复重复优化时，导致删除startupImage失败的问题", type: "fix" },
-      { text: "修复do-2-1任务时5.x版本失败问题", type: "fix" },
-      { text: "修复了读取注册表未处理错误的异常崩溃", type: "fix" },
-      { text: "修复5.x版本注册表读取异常", type: "fix" },
-      { text: "修复5.x版本读取MuMuManager.exe异常", type: "fix" },
-      { text: "修复overlay优化包图标异常", type: "fix" },
-      { text: "修复在Win1122H2中部分版本中资源识别和安装异常", type: "fix" },
-      { text: "修复新版资源包识别为损坏的错误", type: "fix" },
-      { text: "修复读取注册表因为重定向而导致报错的问题", type: "fix" },
-      { text: "优化下载运行，推出懒人一键包，自带资源解压即用", type: "opt" },
-      { text: "优化安装资源包，支持从安全选项卡中复制路径", type: "opt" },
-      { text: "优化请求更新地址", type: "opt" },
-      { text: "优化界面操作逻辑，去除了不必要的重复Enter", type: "opt" },
-      { text: "优化信息输出显示，支持多种颜色显示", type: "opt" },
-      { text: "优化了一下请求服务器的User-Agent", type: "opt" },
-      { text: "简化资源包管理页面输入内容长度", type: "opt" },
-      { text: "删除更改配置时重复显示的[配置已保存]信息", type: "opt" }
+      { text: "Añadida la modificación automática de MuMuPlayerUpdater.exe", type: "add" },
+      { text: "Añadida la optimización para la versión MuMu 5.x", type: "add" },
+      { text: "Añadido el sitio web oficial de versiones anteriores de MuMu", type: "add" },
+      { text: "Añadida la herramienta de extracción de paquetes de recursos por línea de comandos", type: "add" },
+      { text: "Añadida la búsqueda automática de actualizaciones", type: "add" },
+      { text: "Añadido el elemento de detección vbox-env", type: "add" },
+      { text: "Añadida la versión de 32 bits", type: "add" },
+      { text: "Actualizados los instaladores sin conexión 5.2 y 5.5", type: "add" },
+      { text: "Actualizados los instaladores en línea 5.0.1 y 5.0.2", type: "add" },
+      { text: "Actualizada la versión del software UU Remote", type: "add" },
+      { text: "Actualizada la herramienta de detección ColaBoxChecker a MuMuChecker", type: "add" },
+      { text: "Añadida la detección de la versión del emulador MuMu", type: "add" },
+      { text: "La obtención del número de versión permite leer el archivo de configuración", type: "add" },
+      { text: "Integradas las funciones de la versión de prueba de Mupro", type: "add" },
+      { text: "Añadida la función de registro detallado", type: "add" },
+      { text: "Habilitada la depuración DEV; la línea de comandos permite activar el modo de depuración", type: "add" },
+      { text: "Corregido el fallo al eliminar startupImage cuando se repetía la optimización", type: "fix" },
+      { text: "Corregido el fallo de la versión 5.x en la tarea do-2-1", type: "fix" },
+      { text: "Corregido el cierre inesperado al leer el registro sin gestionar los errores", type: "fix" },
+      { text: "Corregida la lectura del registro en la versión 5.x", type: "fix" },
+      { text: "Corregida la lectura de MuMuManager.exe en la versión 5.x", type: "fix" },
+      { text: "Corregido el icono del paquete de optimización overlay", type: "fix" },
+      { text: "Corregidos los fallos de detección e instalación de recursos en algunas versiones de Windows 11 22H2", type: "fix" },
+      { text: "Corregido el error que identificaba los paquetes de recursos nuevos como dañados", type: "fix" },
+      { text: "Corregido el error al leer el registro provocado por la redirección", type: "fix" },
+      { text: "Optimizada la descarga y la ejecución; se lanza el paquete todo en uno con los recursos incluidos, listos para usar tras descomprimir", type: "opt" },
+      { text: "Optimizada la instalación de paquetes de recursos, ahora permite copiar la ruta desde la pestaña Seguridad", type: "opt" },
+      { text: "Optimizada la dirección de solicitud de actualizaciones", type: "opt" },
+      { text: "Optimizada la lógica de uso de la interfaz, eliminando la necesidad de pulsar Enter repetidamente", type: "opt" },
+      { text: "Optimizada la visualización de los mensajes de salida, con soporte para varios colores", type: "opt" },
+      { text: "Optimizado el User-Agent enviado al servidor", type: "opt" },
+      { text: "Simplificada la longitud del contenido introducido en la página de gestión de paquetes de recursos", type: "opt" },
+      { text: "Eliminado el mensaje [Configuración guardada] que se mostraba repetidamente al cambiar la configuración", type: "opt" }
     ]
   },
   {
     version: "Python-v4.1",
     date: "0000-00-00",
     items: [
-      { text: "新增软件设置", type: "add" },
-      { text: "新增MuMu组件安装功能", type: "add" },
-      { text: "新增运行环境检查功能", type: "add" },
-      { text: "新增对资源包的列表修改", type: "add" },
-      { text: "新增全局数据配置", type: "add" },
-      { text: "新增对data优化包的描述", type: "add" },
-      { text: "新增一键清理多开(MuMu数据)", type: "add" },
-      { text: "修复了几个路径不规范报错的问题", type: "fix" },
-      { text: "修复导入备份和压缩备份设置7z路径", type: "fix" },
-      { text: "修复备份Pro中的多个bug", type: "fix" },
-      { text: "移除了安装路径提示", type: "fix" },
-      { text: "优化输出显示", type: "opt" },
-      { text: "优化代码重复内容", type: "opt" },
-      { text: "优化各项按键描述内容", type: "opt" },
-      { text: "优化创建的不必要目录文件", type: "opt" }
+      { text: "Añadidos los ajustes de la aplicación", type: "add" },
+      { text: "Añadida la función de instalación de componentes de MuMu", type: "add" },
+      { text: "Añadida la función de comprobación del entorno de ejecución", type: "add" },
+      { text: "Añadida la modificación de la lista de paquetes de recursos", type: "add" },
+      { text: "Añadida la configuración global de datos", type: "add" },
+      { text: "Añadida la descripción del paquete de optimización data", type: "add" },
+      { text: "Añadida la limpieza con un clic de multinstancia (datos de MuMu)", type: "add" },
+      { text: "Corregidos varios errores causados por rutas no válidas", type: "fix" },
+      { text: "Corregida la ruta de 7z al importar copias de seguridad y copias comprimidas", type: "fix" },
+      { text: "Corregidos varios errores de Copia de seguridad Pro", type: "fix" },
+      { text: "Eliminado el aviso de la ruta de instalación", type: "fix" },
+      { text: "Optimizada la visualización de la salida", type: "opt" },
+      { text: "Optimizado el código duplicado", type: "opt" },
+      { text: "Optimizadas las descripciones de los distintos botones", type: "opt" },
+      { text: "Optimizados los archivos y carpetas innecesarios que se creaban", type: "opt" }
     ]
   },
   {
     version: "Python-v4.0",
     date: "0000-00-00",
     items: [
-      { text: "新增一键备份、增强备份功能", type: "add" },
-      { text: "新增模块化资源包设计", type: "add" },
-      { text: "新增一键撤销优化", type: "add" },
-      { text: "新增可选优化项目", type: "add" },
-      { text: "新增程序反篡改", type: "add" },
-      { text: "新增更多优化方式及操作", type: "add" },
-      { text: "更新并重构之前的shit山代码", type: "add" },
-      { text: "更新各类MuMu相关资源版本至2025-04-27，修复一些奇妙的旧版bug", type: "add" },
-      { text: "修复由于模拟器名称导致的导出报错，可以通过修改模拟器名称恢复正常", type: "fix" },
-      { text: "优化界面设计", type: "opt" },
-      { text: "优化资源包发布模式", type: "opt" },
-      { text: "优化更新版本时发布的公告", type: "opt" },
-      { text: "优化更新模式(由于网盘改版现已不支持自动下载更新包)", type: "opt" },
-      { text: "优化host修改，解决修改失败和重复添加等问题", type: "opt" }
+      { text: "Añadidas la copia de seguridad con un clic y la copia de seguridad mejorada", type: "add" },
+      { text: "Añadido el diseño modular de paquetes de recursos", type: "add" },
+      { text: "Añadida la opción de revertir la optimización con un clic", type: "add" },
+      { text: "Añadidos los elementos de optimización opcionales", type: "add" },
+      { text: "Añadida la protección del programa contra manipulaciones", type: "add" },
+      { text: "Añadidos más métodos y acciones de optimización", type: "add" },
+      { text: "Actualizado y reestructurado el código desastroso anterior", type: "add" },
+      { text: "Actualizados los recursos relacionados con MuMu a la versión del 2025-04-27 y corregidos algunos errores curiosos de versiones anteriores", type: "add" },
+      { text: "Corregido el error de exportación causado por el nombre del emulador; basta con cambiar el nombre del emulador para volver a la normalidad", type: "fix" },
+      { text: "Optimizado el diseño de la interfaz", type: "opt" },
+      { text: "Optimizado el modo de publicación de paquetes de recursos", type: "opt" },
+      { text: "Optimizado el anuncio que se publica al actualizar la versión", type: "opt" },
+      { text: "Optimizado el modo de actualización (debido al cambio del servicio de almacenamiento en la nube, ya no se admite la descarga automática de paquetes de actualización)", type: "opt" },
+      { text: "Optimizada la modificación del archivo hosts, resolviendo los fallos al modificar y las entradas duplicadas", type: "opt" }
     ]
   }
 ];
@@ -228,7 +228,7 @@ const TYPE_CLASS = {
 let changelogIndex = 0;
 let changelogItems = [];
 
-/** 从 JSON 数据构建单个版本的 DOM 节点 */
+/** Crea el nodo DOM de una versión a partir de los datos JSON */
 function buildChangelogItem(entry) {
   const item = document.createElement("div");
   item.className = "changelog-item";
@@ -259,7 +259,7 @@ function buildChangelogItem(entry) {
   return item;
 }
 
-/** 使用内嵌数据渲染到容器 */
+/** Renderiza los datos integrados en el contenedor */
 function loadChangelogData() {
   const container = document.getElementById("about-changelog");
   if (!container) return;
@@ -318,7 +318,7 @@ function initChangelogModal() {
     if (e.target === overlay) close();
   });
 
-  // 上一个 / 下一个
+  // Anterior / Siguiente
   const prevBtn = document.getElementById("btn-changelog-prev");
   const nextBtn = document.getElementById("btn-changelog-next");
   if (prevBtn) {

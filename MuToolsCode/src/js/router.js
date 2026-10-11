@@ -1,4 +1,4 @@
-// 页面路由
+// Enrutado de páginas
 import { loadBackendLogs } from "./logger.js";
 import { loadSettings, loadAdminStatus } from "./settings.js";
 import { loadPackages } from "./packages.js";

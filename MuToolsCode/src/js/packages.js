@@ -1,17 +1,17 @@
-// 资源包管理页面
+// Página de gestión de paquetes de recursos
 import { showToast, formatSize, escapeHtml } from "./toast.js";
 import { addLog } from "./logger.js";
 const { invoke } = window.__TAURI__.core;
 
 let pendingDelete = null; // { packageName, descFile?, descName? }
 
-// 删除确认
+// Confirmación de eliminación
 
 export function showDeleteConfirm(packageName, descFile, descName) {
   pendingDelete = { packageName, descFile: descFile || null, descName: descName || null };
   const msg = descFile
-    ? `确定删除子包 "${descName || descFile}" 吗？`
-    : `确定删除资源包 "${packageName}" 吗？`;
+    ? `¿Seguro que quieres eliminar el subpaquete "${descName || descFile}"?`
+    : `¿Seguro que quieres eliminar el paquete de recursos "${packageName}"?`;
   document.getElementById("modal-delete-message").textContent = msg;
   document.getElementById("modal-delete-overlay").style.display = "flex";
 }
@@ -29,22 +29,22 @@ async function confirmDeletePackage() {
   try {
     if (del.descFile) {
       await invoke("delete_sub_package", { packageName: del.packageName, descFile: del.descFile });
-      addLog(`已删除子包: ${del.descName || del.descFile}`);
+      addLog(`Subpaquete eliminado: ${del.descName || del.descFile}`);
     } else {
       await invoke("delete_resource_package", { name: del.packageName });
-      addLog(`已删除资源包: ${del.packageName}`);
+      addLog(`Paquete de recursos eliminado: ${del.packageName}`);
     }
     hideDeleteConfirm();
     await loadPackages();
   } catch (e) {
-    showToast(`删除失败: ${e}`, "error");
-    addLog(`删除失败: ${e}`);
+    showToast(`Error al eliminar: ${e}`, "error");
+    addLog(`Error al eliminar: ${e}`);
   } finally {
     confirmBtn.disabled = false;
   }
 }
 
-// 加载资源包列表
+// Cargar la lista de paquetes de recursos
 
 export async function loadPackages() {
   try {
@@ -54,7 +54,7 @@ export async function loadPackages() {
     if (!list || list.length === 0) {
       const empty = document.createElement("div");
       empty.className = "pkg-empty";
-      empty.textContent = "暂无资源包";
+      empty.textContent = "No hay paquetes de recursos";
       container.appendChild(empty);
       return;
     }
@@ -96,7 +96,7 @@ export async function loadPackages() {
       meta.className = "pkg-meta";
       let metaParts = [];
       if (hasSubItems) {
-        metaParts.push(`${pkg.descInfos.length} 个子包`);
+        metaParts.push(`${pkg.descInfos.length} subpaquetes`);
       } else {
         metaParts.push(pkg.kind);
       }
@@ -111,26 +111,26 @@ export async function loadPackages() {
 
       const openDirBtn = document.createElement("button");
       openDirBtn.className = "btn-secondary";
-      openDirBtn.textContent = "打开目录";
+      openDirBtn.textContent = "Abrir carpeta";
       openDirBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         invoke("open_resource_dir", { name: pkg.name })
-          .then(() => addLog(`打开资源包目录: ${pkg.name}`))
-          .catch((e) => addLog(`打开资源包目录失败: ${e}`));
+          .then(() => addLog(`Abrir la carpeta del paquete de recursos: ${pkg.name}`))
+          .catch((e) => addLog(`Error al abrir la carpeta del paquete de recursos: ${e}`));
       });
 
       const openLinkBtn = document.createElement("button");
       openLinkBtn.className = "btn-secondary";
-      openLinkBtn.textContent = "打开链接";
+      openLinkBtn.textContent = "Abrir enlace";
       openLinkBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const url = pkg.manifest?.webpage;
         if (url) {
           invoke("open_url", { url })
-            .then(() => addLog(`打开链接: ${url}`))
-            .catch((e) => addLog(`打开链接失败: ${e}`));
+            .then(() => addLog(`Abrir enlace: ${url}`))
+            .catch((e) => addLog(`Error al abrir el enlace: ${e}`));
         } else {
-          showToast("该资源包没有关联链接", "info");
+          showToast("Este paquete de recursos no tiene ningún enlace asociado", "info");
         }
       });
 
@@ -140,7 +140,7 @@ export async function loadPackages() {
       if (!hasSubItems) {
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "btn-secondary btn-danger";
-        deleteBtn.textContent = "删除";
+        deleteBtn.textContent = "Eliminar";
         deleteBtn.addEventListener("click", (e) => { e.stopPropagation(); showDeleteConfirm(pkg.name); });
         actions.appendChild(deleteBtn);
       }
@@ -170,15 +170,15 @@ export async function loadPackages() {
 
           const subName = document.createElement("div");
           subName.className = "pkg-sub-name";
-          subName.textContent = di.name || "未命名";
+          subName.textContent = di.name || "Sin nombre";
           subInfo.appendChild(subName);
 
           const subMeta = document.createElement("div");
           subMeta.className = "pkg-sub-meta";
           const parts = [];
           if (di.builder) parts.push(di.builder);
-          if (di.displayVersion) parts.push(`版本: ${di.displayVersion}`);
-          if (di.buildVersion) parts.push(`构建版本: ${di.buildVersion}`);
+          if (di.displayVersion) parts.push(`Versión: ${di.displayVersion}`);
+          if (di.buildVersion) parts.push(`Versión de compilación: ${di.buildVersion}`);
           if (di.time) parts.push(new Date(di.time * 1000).toLocaleString());
           subMeta.textContent = parts.join(" · ");
           subInfo.appendChild(subMeta);
@@ -187,7 +187,7 @@ export async function loadPackages() {
 
           const subDeleteBtn = document.createElement("button");
           subDeleteBtn.className = "btn-secondary btn-danger btn-sm";
-          subDeleteBtn.textContent = "删除";
+          subDeleteBtn.textContent = "Eliminar";
           subDeleteBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             showDeleteConfirm(pkg.name, di.descFile, di.name);
@@ -206,7 +206,7 @@ export async function loadPackages() {
           if (di.fileList && di.fileList.length > 0) {
             const flInfo = document.createElement("div");
             flInfo.className = "pkg-sub-files";
-            flInfo.textContent = `文件: ${di.fileList.map(f => `${f.filename} (${formatSize(f.size)})`).join(", ")}`;
+            flInfo.textContent = `Archivos: ${di.fileList.map(f => `${f.filename} (${formatSize(f.size)})`).join(", ")}`;
             subItem.appendChild(flInfo);
           }
 
@@ -219,11 +219,11 @@ export async function loadPackages() {
       container.appendChild(card);
     });
   } catch (e) {
-    showToast(`加载资源包列表失败: ${e}`, "error");
+    showToast(`Error al cargar la lista de paquetes de recursos: ${e}`, "error");
   }
 }
 
-// 安装模态框
+// Ventana modal de instalación
 
 function showModal() {
   document.getElementById("modal-install-overlay").style.display = "flex";
@@ -250,10 +250,10 @@ async function browseFile() {
     const path = await invoke("browse_file");
     if (path) {
       document.getElementById("modal-install-path").value = path;
-      addLog(`选择本地文件: ${path}`);
+      addLog(`Archivo local seleccionado: ${path}`);
     }
   } catch (e) {
-    addLog(`选择文件失败: ${e}`);
+    addLog(`Error al seleccionar el archivo: ${e}`);
   }
 }
 
@@ -268,48 +268,48 @@ async function doInstall() {
 
     if (method === "local" && path) {
       hideModal();
-      showToast("正在安装本地资源包...", "info");
-      addLog(`安装本地资源包: ${path}`);
+      showToast("Instalando el paquete de recursos local...", "info");
+      addLog(`Instalar paquete de recursos local: ${path}`);
       const pkg = await invoke("install_resource_from_path", { sourcePath: path });
-      showToast(`安装成功: ${pkg.manifest.name || pkg.name}`, "success");
-      addLog(`资源包安装成功: ${pkg.manifest.name || pkg.name}`);
+      showToast(`Instalación correcta: ${pkg.manifest.name || pkg.name}`, "success");
+      addLog(`Paquete de recursos instalado correctamente: ${pkg.manifest.name || pkg.name}`);
       await loadPackages();
     } else if (method === "online" && url) {
       hideModal();
-      showToast("正在下载并安装...", "info");
-      addLog(`下载资源包: ${url}`);
+      showToast("Descargando e instalando...", "info");
+      addLog(`Descargar paquete de recursos: ${url}`);
       const pkg = await invoke("install_resource_from_url", { url });
-      showToast(`安装成功: ${pkg.manifest.name || pkg.name}`, "success");
-      addLog(`资源包下载安装成功: ${pkg.manifest.name || pkg.name}`);
+      showToast(`Instalación correcta: ${pkg.manifest.name || pkg.name}`, "success");
+      addLog(`Paquete de recursos descargado e instalado correctamente: ${pkg.manifest.name || pkg.name}`);
       await loadPackages();
     } else {
-      showToast(method === "local" ? "选择本地资源包文件" : "输入远程 URL", "error");
+      showToast(method === "local" ? "Selecciona un archivo de paquete de recursos local" : "Introduce la URL remota", "error");
       btn.disabled = false;
     }
   } catch (e) {
-    showToast(`安装失败: ${e}`, "error");
-    addLog(`资源包安装失败: ${e}`);
+    showToast(`Error de instalación: ${e}`, "error");
+    addLog(`Error al instalar el paquete de recursos: ${e}`);
   }
   btn.disabled = false;
 }
 
 
 
-// 刷新列表
+// Actualizar la lista
 
 export function refreshPackages() {
-  addLog("刷新资源包列表");
+  addLog("Actualizar la lista de paquetes de recursos");
   loadPackages();
 }
 
-// 事件绑定
+// Vinculación de eventos
 
 export function initPackagesPage() {
   document.getElementById("btn-pkg-install").addEventListener("click", showModal);
   document.getElementById("btn-pkg-refresh").addEventListener("click", refreshPackages);
   document.getElementById("btn-pkg-open-folder").addEventListener("click", async () => {
     try { await invoke("open_resource_dir", { name: "" }); }
-    catch (e) { addLog(`打开资源目录失败: ${e}`); }
+    catch (e) { addLog(`Error al abrir la carpeta de recursos: ${e}`); }
   });
 
   // Modal

@@ -47,9 +47,9 @@ impl Default for DataConfig {
 
 fn get_config_path() -> Result<PathBuf, String> {
     let exe_dir = std::env::current_exe()
-        .map_err(|e| format!("无法获取exe路径: {}", e))?
+        .map_err(|e| format!("No se pudo obtener la ruta del exe: {}", e))?
         .parent()
-        .ok_or_else(|| "无法获取exe目录".to_string())?
+        .ok_or_else(|| "No se pudo obtener la carpeta del exe".to_string())?
         .to_path_buf();
     Ok(exe_dir.join("mutools_config.json"))
 }
@@ -123,9 +123,9 @@ pub fn save_data_config(data_dir_mode: String, data_dir_custom: String) -> Resul
     };
     let config_path = get_config_path()?;
     let content = serde_json::to_string_pretty(&config)
-        .map_err(|e| format!("序列化配置失败: {}", e))?;
+        .map_err(|e| format!("Error al serializar la configuración: {}", e))?;
     fs::write(&config_path, content)
-        .map_err(|e| format!("写入配置文件失败: {}", e))?;
+        .map_err(|e| format!("Error al escribir el archivo de configuración: {}", e))?;
     Ok(())
 }
 
@@ -135,9 +135,9 @@ pub fn save_admin_elevation(enabled: bool) -> Result<(), String> {
     let mut config = read_config();
     config.admin_elevation = enabled;
     let content = serde_json::to_string_pretty(&config)
-        .map_err(|e| format!("序列化配置失败: {}", e))?;
+        .map_err(|e| format!("Error al serializar la configuración: {}", e))?;
     fs::write(&config_path, content)
-        .map_err(|e| format!("写入配置文件失败: {}", e))?;
+        .map_err(|e| format!("Error al escribir el archivo de configuración: {}", e))?;
     Ok(())
 }
 
@@ -148,9 +148,9 @@ pub fn save_aria2_config(max_connections: u32, split: u32) -> Result<(), String>
     config.aria2_max_connections = max_connections;
     config.aria2_split = split;
     let content = serde_json::to_string_pretty(&config)
-        .map_err(|e| format!("序列化配置失败: {}", e))?;
+        .map_err(|e| format!("Error al serializar la configuración: {}", e))?;
     fs::write(&config_path, content)
-        .map_err(|e| format!("写入配置文件失败: {}", e))?;
+        .map_err(|e| format!("Error al escribir el archivo de configuración: {}", e))?;
     Ok(())
 }
 
@@ -174,9 +174,9 @@ pub fn save_auto_delete_installer(enabled: bool) -> Result<(), String> {
     let mut config = read_config();
     config.auto_delete_installer = enabled;
     let content = serde_json::to_string_pretty(&config)
-        .map_err(|e| format!("序列化配置失败: {}", e))?;
+        .map_err(|e| format!("Error al serializar la configuración: {}", e))?;
     fs::write(&config_path, content)
-        .map_err(|e| format!("写入配置文件失败: {}", e))?;
+        .map_err(|e| format!("Error al escribir el archivo de configuración: {}", e))?;
     Ok(())
 }
 

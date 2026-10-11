@@ -12,12 +12,12 @@ use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken}
 use windows_sys::Win32::UI::Shell::ShellExecuteW;
 use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
-/// 将 &str 转为以 null 结尾的 UTF-16 宽字符串
+/// Convierte un &str en una cadena ancha UTF-16 terminada en null
 fn to_wide(s: &str) -> Vec<u16> {
     OsStr::new(s).encode_wide().chain(iter::once(0)).collect()
 }
 
-/// 检测管理员权限
+/// Detecta los permisos de administrador
 pub fn is_admin() -> bool {
     unsafe {
         let mut token: HANDLE = std::ptr::null_mut();
@@ -40,7 +40,7 @@ pub fn is_admin() -> bool {
     }
 }
 
-/// 管理员身份重启
+/// Reinicia la aplicación con permisos de administrador
 pub fn relaunch_as_admin(args: &[String]) -> bool {
     let exe = std::env::current_exe()
         .ok()
@@ -53,7 +53,7 @@ pub fn relaunch_as_admin(args: &[String]) -> bool {
     let verb = to_wide("runas");
     let file = to_wide(&exe);
 
-    // 构造命令行参数字符串
+    // Construye la cadena de argumentos de la línea de comandos
     let mut params = String::new();
     for a in args {
         if !params.is_empty() {
@@ -89,7 +89,7 @@ pub fn relaunch_as_admin(args: &[String]) -> bool {
         )
     };
 
-    // ShellExecuteW 返回值 > 32 表示成功
+    // Un valor de retorno de ShellExecuteW > 32 indica exito
     let success = result as usize > 32;
     if success {
         exit(0);
@@ -97,15 +97,15 @@ pub fn relaunch_as_admin(args: &[String]) -> bool {
     success
 }
 
-/// 供子进程检测是否是提权重启场景的标记参数
+/// Parametro marcador para que el proceso hijo detecte si es un reinicio con elevación de privilegios
 pub const ELEVATION_FLAG: &str = "--elevated";
 
-/// 是否在命令行中携带了提权标记
+/// Indica si la línea de comandos incluye el marcador de elevación de privilegios
 pub fn has_elevation_flag() -> bool {
     std::env::args().any(|a| a == ELEVATION_FLAG)
 }
 
-/// 防止无限循环的安全检查
+/// Comprobacion de seguridad para evitar un bucle infinito
 pub fn get_elevation_attempt() -> u32 {
     std::env::var("MUTOOLS_ELEVATION_ATTEMPT")
         .ok()
@@ -113,56 +113,56 @@ pub fn get_elevation_attempt() -> u32 {
         .unwrap_or(0)
 }
 
-/// 设置提权尝试次数到环境变量，供子进程读取
+/// Escribe el número de intentos de elevación en una variable de entorno para que la lea el proceso hijo
 pub fn set_elevation_attempt_env(n: u32) {
     std::env::set_var("MUTOOLS_ELEVATION_ATTEMPT", n.to_string());
 }
 
-/// 启动时执行提权检查
+/// Realiza la comprobacion de elevación de privilegios al arrancar
 pub fn check_and_elevate(admin_elevation: bool) {
     if !admin_elevation {
         return;
     }
 
-    // 已经是管理员权限，无需提权
+    // Ya se tienen permisos de administrador, no hace falta elevar privilegios
     if is_admin() {
         if has_elevation_flag() {
-            log::info!("以管理员权限重新启动成功");
+            log::info!("Reinicio con permisos de administrador correcto");
         }
         return;
     }
 
-    // dev 环境下跳过提权重启
+    // En entorno dev se omite el reinicio con elevación de privilegios
     if is_dev_env() {
-        log::info!("处于 dev 环境，非管理员权限，跳过自动提权");
+        log::info!("Entorno dev sin permisos de administrador: se omite la elevación automática de privilegios");
         return;
     }
 
-    // 防止无限重启循环
+    // Evita un bucle infinito de reinicios
     let attempt = get_elevation_attempt();
     if attempt >= 3 {
-        log::warn!("已尝试 {} 次，放弃提权", attempt);
+        log::warn!("Se ha intentado {} veces; se descarta la elevación de privilegios", attempt);
         return;
     }
 
-    // 构造子进程参数
+    // Construye los argumentos del proceso hijo
     let mut args: Vec<String> = std::env::args().skip(1).collect();
-    // 过滤掉可能已有的标记
+    // Descarta el marcador que ya pudiera estar presente
     args.retain(|a| a != ELEVATION_FLAG);
     args.push(ELEVATION_FLAG.to_string());
 
-    // 设置环境变量传递提权尝试次数
+    // Define la variable de entorno que transmite el número de intentos de elevación
     set_elevation_attempt_env(attempt + 1);
 
-    log::info!("第 {} 尝试以管理员权限重启", attempt + 1);
+    log::info!("Intento {} de reiniciar con permisos de administrador", attempt + 1);
 
-    // 尝试提权重启
+    // Intenta el reinicio con elevación de privilegios
     if !relaunch_as_admin(&args) {
-        log::warn!("自动提权失败，将以普通权限继续运行");
+        log::warn!("La elevación automática de privilegios ha fallado; se continuara sin privilegios elevados");
     }
 }
 
-/// 检测是否处于dev
+/// Detecta si se esta en dev
 fn is_dev_env() -> bool {
     if cfg!(debug_assertions) {
         return true;
@@ -170,7 +170,7 @@ fn is_dev_env() -> bool {
     false
 }
 
-/// 供命令行调用
+/// Para uso desde la línea de comandos
 pub fn current_is_admin() -> bool {
     is_admin()
 }

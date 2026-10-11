@@ -1,4 +1,4 @@
-// 日志模块
+// Módulo de registro
 
 const { invoke } = window.__TAURI__.core;
 
@@ -14,7 +14,7 @@ export function formatTime() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-export function addLog(message, source = "前端") {
+export function addLog(message, source = "Interfaz") {
   const time = formatTime();
   const entry = `[${time}] [${source}] ${message}`;
   allLogEntries.push(entry);
@@ -27,7 +27,7 @@ export function renderMergedLogs() {
   if (!container) return;
   container.innerHTML = "";
   if (allLogEntries.length === 0) {
-    container.textContent = "暂无日志";
+    container.textContent = "No hay registros";
     return;
   }
   allLogEntries.forEach((entry) => {
@@ -51,7 +51,7 @@ export async function loadBackendLogs() {
       renderMergedLogs();
     }
   } catch (e) {
-    console.error("加载后端日志失败:", e);
+    console.error("No se pudieron cargar los registros del backend:", e);
   }
 }
 
@@ -59,5 +59,5 @@ export function clearLogs() {
   allLogEntries = [];
   renderMergedLogs();
   invoke("clear_logs").catch(() => { });
-  addLog("日志已清空");
+  addLog("Registro vaciado");
 }

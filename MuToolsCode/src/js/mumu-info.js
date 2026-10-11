@@ -1,4 +1,3 @@
-
 import { addLog } from "./logger.js";
 import { escapeHtml } from "./toast.js";
 const { invoke } = window.__TAURI__.core;
@@ -10,15 +9,15 @@ export async function loadMuMuInfo() {
   const container = document.getElementById("mumu-info-content");
   if (!container) return;
 
-  container.innerHTML = '<div class="mumu-info-loading">加载中...</div>';
+  container.innerHTML = '<div class="mumu-info-loading">Cargando...</div>';
 
   try {
     const info = await invoke("get_mumu_info");
     renderMuMuInfo(info);
-    addLog("MuMu 信息加载成功");
+    addLog("Información de MuMu cargada correctamente");
   } catch (e) {
-    container.innerHTML = `<div class="mumu-info-error">加载失败: ${e}</div>`;
-    addLog(`MuMu 信息加载失败: ${e}`);
+    container.innerHTML = `<div class="mumu-info-error">Error al cargar: ${e}</div>`;
+    addLog(`Error al cargar la información de MuMu: ${e}`);
   }
 }
 
@@ -27,31 +26,31 @@ function renderMuMuInfo(info) {
   if (!container) return;
 
   const majorVer = info.majorVersion || "?";
-  const fullVer = info.fullVersion || "未知";
-  const channel = info.channel || "未知";
-  const installDir = info.installDir || "未检测到";
-  const mumuManager = info.mumuManagerPath || "未找到";
-  const appdataDir = info.appdataDir || "未知";
-  const registryKey = info.registryKey || "未检测到";
-  const uninstallStr = info.uninstallString || "未检测到";
+  const fullVer = info.fullVersion || "Desconocido";
+  const channel = info.channel || "Desconocido";
+  const installDir = info.installDir || "No detectado";
+  const mumuManager = info.mumuManagerPath || "No encontrado";
+  const appdataDir = info.appdataDir || "Desconocido";
+  const registryKey = info.registryKey || "No detectado";
+  const uninstallStr = info.uninstallString || "No detectado";
 
-  const isMissing = (v) => v === "未检测到" || v === "未找到" || v === "未知";
+  const isMissing = (v) => v === "No detectado" || v === "No encontrado" || v === "Desconocido";
 
   let html = '<div class="mumu-info-card">';
   html += '<div class="mumu-info-hero">';
   html += '<div class="mumu-info-versions">';
   html += `<div class="mumu-info-major">MuMu ${escapeHtml(majorVer)}</div>`;
-  html += `<div class="mumu-info-full">完整版本号: ${escapeHtml(fullVer)}</div>`;
-  html += `<div class="mumu-info-channel">渠道: ${escapeHtml(channel)}</div>`;
+  html += `<div class="mumu-info-full">Versión completa: ${escapeHtml(fullVer)}</div>`;
+  html += `<div class="mumu-info-channel">Canal: ${escapeHtml(channel)}</div>`;
   html += '</div></div>';
 
   html += '<div class="mumu-info-details">';
   const detailItems = [
-    { label: "安装根目录", value: installDir },
+    { label: "Carpeta raíz de instalación", value: installDir },
     { label: "MuMuManager", value: mumuManager },
-    { label: "AppData 目录", value: appdataDir },
-    { label: "注册表项", value: registryKey },
-    { label: "卸载路径", value: uninstallStr },
+    { label: "Carpeta AppData", value: appdataDir },
+    { label: "Clave del registro", value: registryKey },
+    { label: "Ruta de desinstalación", value: uninstallStr },
   ];
   detailItems.forEach((item) => {
     const cls = isMissing(item.value) ? "mumu-info-detail-row missing" : "mumu-info-detail-row";
@@ -71,14 +70,14 @@ function renderMuMuInfo(info) {
   container.innerHTML = html;
 }
 
-// 自动刷新
+// Actualización automática
 
 export function startMuMuAutoRefresh() {
   stopMuMuAutoRefresh();
   const enabled = getAutoRefreshSetting();
   mumuAutoRefreshEnabled = enabled;
   if (enabled) {
-    addLog("自动刷新 MuMu 信息");
+    addLog("Actualización automática de la información de MuMu");
     loadMuMuInfo().catch(() => { });
   }
 }
@@ -119,11 +118,11 @@ export function onAutoRefreshSettingChanged() {
   }
 }
 
-// 事件绑定
+// Vinculación de eventos
 
 export function initMuMuInfoPage() {
   document.getElementById("btn-mumu-refresh").addEventListener("click", () => {
-    addLog("手动刷新 MuMu 信息");
+    addLog("Actualización manual de la información de MuMu");
     loadMuMuInfo();
   });
 }

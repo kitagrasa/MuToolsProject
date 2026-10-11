@@ -1,16 +1,16 @@
-// MuMu安装
+// Instalación de MuMu
 import { showToast, formatSize } from "./toast.js";
 import { addLog } from "./logger.js";
 import { refreshMuMuInfoAfterInstall } from "./mumu-info.js";
 const { invoke } = window.__TAURI__.core;
 
-// 安装进度状态
+// Estado del progreso de instalación
 let installProgressPhase = null; // "download" | "install" | null
 let simulatedInstallTimer = null;
 let totalProgressPct = 0;
 let downloadPaused = false;
 
-// 当前下载状态
+// Estado actual de la descarga
 let downloadState = {
   active: false,
   version: null,
@@ -25,7 +25,7 @@ let downloadState = {
 export function showInlineProgress() {
   const bar = document.getElementById("install-progress-bar");
   if (bar) bar.style.display = "";
-  document.getElementById("install-progress-task").textContent = "准备中...";
+  document.getElementById("install-progress-task").textContent = "Preparando...";
   document.getElementById("install-progress-percent").textContent = "0%";
   document.getElementById("install-progress-fill").style.width = "0%";
   document.getElementById("install-progress-detail").textContent = "";
@@ -54,7 +54,7 @@ function showDownloadButtons() {
 function updatePauseButtonLabel() {
   const btn = document.getElementById("btn-pause-download");
   if (btn) {
-    btn.textContent = downloadPaused ? "继续" : "暂停";
+    btn.textContent = downloadPaused ? "Continuar" : "Pausar";
   }
 }
 
@@ -86,7 +86,7 @@ export function startSimulatedInstallProgress() {
       const elapsed = Date.now() - startTime;
       const t = Math.min(elapsed / duration, 1);
       const simulatedPct = 60 + 38 * (1 - Math.pow(1 - t, 2));
-      updateInlineProgress(simulatedPct, "安装中...", "正在静默安装，请稍候...");
+      updateInlineProgress(simulatedPct, "Instalando...", "Instalando en segundo plano, espera un momento...");
       if (t >= 1) {
         clearInterval(simulatedInstallTimer);
         simulatedInstallTimer = null;
@@ -103,13 +103,13 @@ export function finishInstallProgress() {
     simulatedInstallTimer._resolve = null;
   }
   simulatedInstallTimer = null;
-  updateInlineProgress(100, "安装完成!", "MuMu 模拟器已成功安装");
+  updateInlineProgress(100, "Instalación completada!", "El emulador MuMu se ha instalado correctamente");
   setTimeout(() => {
     hideInlineProgress();
   }, 3000);
 }
 
-// 下载控制
+// Control de la descarga
 
 async function pauseOrResumeDownload() {
   if (downloadPaused) {
@@ -117,9 +117,9 @@ async function pauseOrResumeDownload() {
     updatePauseButtonLabel();
     try {
       await invoke("resume_download");
-      addLog("恢复下载");
+      addLog("Reanudar descarga");
     } catch (e) {
-      addLog(`恢复下载失败: ${e}`);
+      addLog(`Error al reanudar la descarga: ${e}`);
     }
 
     if (downloadState.version === "MuMu12-V6") {
@@ -129,11 +129,11 @@ async function pauseOrResumeDownload() {
           componentsJson: JSON.stringify(downloadState.components),
           resume: true,
         });
-        addLog(`V6 所有组件下载完成`);
+        addLog(`Descarga de todos los componentes V6 completada`);
 
         installProgressPhase = "install";
         document.getElementById("install-progress-actions").style.display = "none";
-        updateInlineProgress(60, "安装中...", "正在静默安装，请稍候...");
+        updateInlineProgress(60, "Instalando...", "Instalando en segundo plano, espera un momento...");
         startSimulatedInstallProgress();
 
         const result = await invoke("install_v6_setup", {
@@ -143,8 +143,8 @@ async function pauseOrResumeDownload() {
           productVersion: downloadState.productVersion,
         });
         finishInstallProgress();
-        showToast(`${downloadState.version} 安装成功！`, "success");
-        addLog(`${downloadState.version} 安装成功: ${result}`);
+        showToast(`${downloadState.version} instalado correctamente!`, "success");
+        addLog(`${downloadState.version} instalado correctamente: ${result}`);
         downloadState.active = false;
         refreshMuMuInfoAfterInstall();
       } catch (e) {
@@ -158,12 +158,12 @@ async function pauseOrResumeDownload() {
           version: downloadState.version,
           resume: true,
         });
-        addLog(`${downloadState.version} 安装包下载完成: ${installerPath}`);
-        showToast("下载完成，正在静默安装...", "info");
+        addLog(`Descarga del instalador ${downloadState.version} completada: ${installerPath}`);
+        showToast("Descarga completada, instalando en segundo plano...", "info");
 
         installProgressPhase = "install";
         document.getElementById("install-progress-actions").style.display = "none";
-        updateInlineProgress(60, "安装中...", "正在静默安装，请稍候...");
+        updateInlineProgress(60, "Instalando...", "Instalando en segundo plano, espera un momento...");
         startSimulatedInstallProgress();
 
         const result = await invoke("install_v4_setup", {
@@ -171,8 +171,8 @@ async function pauseOrResumeDownload() {
           installDir: downloadState.installDir,
         });
         finishInstallProgress();
-        showToast(`${downloadState.version} 安装成功！`, "success");
-        addLog(`${downloadState.version} 安装成功: ${result}`);
+        showToast(`${downloadState.version} instalado correctamente!`, "success");
+        addLog(`${downloadState.version} instalado correctamente: ${result}`);
         downloadState.active = false;
         refreshMuMuInfoAfterInstall();
       } catch (e) {
@@ -182,9 +182,9 @@ async function pauseOrResumeDownload() {
   } else {
     try {
       await invoke("pause_download");
-      showToast("下载已暂停", "info");
+      showToast("Descarga pausada", "info");
     } catch (e) {
-      addLog(`暂停下载失败: ${e}`);
+      addLog(`Error al pausar la descarga: ${e}`);
     }
     downloadPaused = true;
   }
@@ -194,38 +194,38 @@ async function pauseOrResumeDownload() {
 async function cancelDownload() {
   try {
     await invoke("cancel_download");
-    addLog("下载已取消");
-    showToast("下载已取消，已删除下载的文件", "info");
+    addLog("Descarga cancelada");
+    showToast("Descarga cancelada, se han eliminado los archivos descargados", "info");
   } catch (e) {
-    addLog(`取消下载失败: ${e}`);
+    addLog(`Error al cancelar la descarga: ${e}`);
   }
   hideInlineProgress();
   downloadState.active = false;
 }
 
 function handleInstallError(e) {
-  if (String(e).includes("已取消")) {
+  if (String(e).includes("Descarga cancelada")) {
     hideInlineProgress();
-    showToast("下载已取消，文件已删除", "info");
-    addLog(`${downloadState.version} 下载已取消`);
+    showToast("Descarga cancelada, se han eliminado los archivos", "info");
+    addLog(`${downloadState.version} descarga cancelada`);
     downloadState.active = false;
-  } else if (String(e).includes("已暂停")) {
+  } else if (String(e).includes("Descarga pausada")) {
     downloadPaused = true;
     updatePauseButtonLabel();
-    showToast("下载已暂停", "info");
-    addLog(`${downloadState.version} 下载已暂停`);
+    showToast("Descarga pausada", "info");
+    addLog(`${downloadState.version} descarga pausada`);
   } else {
     hideInlineProgress();
-    showToast(`${downloadState.version} 安装失败: ${e}`, "error");
+    showToast(`${downloadState.version} fallo de instalación: ${e}`, "error");
     downloadState.active = false;
   }
 }
 
-// 安装逻辑
+// Logica de instalación
 
 export async function fetchDownloadUrl() {
   const version = document.getElementById("select-version").value;
-  showToast("正在获取下载链接", "info");
+  showToast("Obteniendo el enlace de descarga", "info");
 
   try {
     const url = await invoke("fetch_download_url", { version: version });
@@ -242,20 +242,20 @@ export async function fetchDownloadUrl() {
         document.getElementById("v6-link-nxmain").value = nxmain ? nxmain.link : "";
         document.getElementById("v6-link-nemux").value = nemux ? nemux.link : "";
         document.getElementById("v6-link-mumu15").value = mumu15 ? mumu15.link : "";
-        showToast(`获取 V6 组件列表成功: ${components.length} 个组件`, "success");
-        addLog(`获取 V6 组件列表成功: version=${v6Data.version}, ${components.length} 个组件`);
+        showToast(`Lista de componentes V6 obtenida correctamente: ${components.length} componentes`, "success");
+        addLog(`Lista de componentes V6 obtenida correctamente: version=${v6Data.version}, ${components.length} componentes`);
       } catch (e) {
         document.getElementById("install-path").value = url;
-        showToast("获取下载链接成功", "success");
-        addLog(`获取下载链接成功: ${url}`);
+        showToast("Enlace de descarga obtenido correctamente", "success");
+        addLog(`Enlace de descarga obtenido correctamente: ${url}`);
       }
     } else {
       document.getElementById("install-path").value = url;
-      showToast("获取下载链接成功", "success");
-      addLog(`获取下载链接成功: ${url}`);
+      showToast("Enlace de descarga obtenido correctamente", "success");
+      addLog(`Enlace de descarga obtenido correctamente: ${url}`);
     }
   } catch (e) {
-    showToast(`获取下载链接失败: ${e}`, "error");
+    showToast(`Error al obtener el enlace de descarga: ${e}`, "error");
   }
 }
 
@@ -264,10 +264,10 @@ export async function browseDirectory() {
     const path = await invoke("browse_directory");
     if (path) {
       document.getElementById("install-dir").value = path;
-      addLog(`选择安装目录: ${path}`);
+      addLog(`Carpeta de instalación seleccionada: ${path}`);
     }
   } catch (e) {
-    addLog(`选择目录失败: ${e}`);
+    addLog(`Error al seleccionar la carpeta: ${e}`);
   }
 }
 
@@ -276,10 +276,10 @@ export async function browseFile() {
     const path = await invoke("browse_file");
     if (path) {
       document.getElementById("install-path").value = path;
-      addLog(`选择安装包文件: ${path}`);
+      addLog(`Archivo del instalador seleccionado: ${path}`);
     }
   } catch (e) {
-    addLog(`选择文件失败: ${e}`);
+    addLog(`Error al seleccionar el archivo: ${e}`);
   }
 }
 
@@ -288,10 +288,10 @@ async function browseV6File(targetId) {
     const path = await invoke("browse_file");
     if (path) {
       document.getElementById(targetId).value = path;
-      addLog(`选择 ${targetId} 文件: ${path}`);
+      addLog(`Archivo ${targetId} seleccionado: ${path}`);
     }
   } catch (e) {
-    addLog(`选择文件失败: ${e}`);
+    addLog(`Error al seleccionar el archivo: ${e}`);
   }
 }
 
@@ -302,8 +302,8 @@ export async function startInstall() {
   const installDir = document.getElementById("install-dir").value.trim();
 
   if (!installDir) {
-    showToast("输入安装目录", "error");
-    addLog("安装失败: 未输入安装目录");
+    showToast("Introduce la carpeta de instalación", "error");
+    addLog("Fallo de instalación: no se ha introducido la carpeta de instalación");
     return;
   }
 
@@ -315,49 +315,49 @@ export async function startInstall() {
       }
 
       if (!path) {
-        showToast("选择安装包路径", "error");
-        addLog("安装失败: 未输入安装包路径");
+        showToast("Selecciona la ruta del instalador", "error");
+        addLog("Fallo de instalación: no se ha introducido la ruta del instalador");
         return;
       }
 
-      updateInlineProgress(0, "安装中...", "正在静默安装，请稍候...");
-      addLog(`${version} 本地安装: ${path} -> ${installDir}`);
+      updateInlineProgress(0, "Instalando...", "Instalando en segundo plano, espera un momento...");
+      addLog(`${version} instalación local: ${path} -> ${installDir}`);
       startSimulatedInstallProgress();
 
       try {
         const result = await invoke("install_v4_setup", { installerPath: path, installDir });
         finishInstallProgress();
-        showToast(`${version} 安装成功！`, "success");
-        addLog(`${version} 安装成功: ${result}`);
+        showToast(`${version} instalado correctamente!`, "success");
+        addLog(`${version} instalado correctamente: ${result}`);
         refreshMuMuInfoAfterInstall();
       } catch (e) {
         hideInlineProgress();
-        showToast(`${version} 安装失败: ${e}`, "error");
+        showToast(`${version} fallo de instalación: ${e}`, "error");
       }
       return;
     }
 
-    // 在线安装
+    // Instalación en línea
     await doOnlineInstall(version, path, installDir);
     return;
   }
 
-  // 其他版本沿用原有逻辑
+  // Las demas versiones mantienen la logica original
   if (!path) {
-    showToast("输入安装包路径", "error");
-    addLog("安装失败: 未输入安装包路径");
+    showToast("Introduce la ruta del instalador", "error");
+    addLog("Fallo de instalación: no se ha introducido la ruta del instalador");
     return;
   }
 
-  showToast("正在安装，请稍候...", "info");
-  addLog(`开始安装: 版本=${version}, 方式=${method}, 路径=${path}, 目录=${installDir}`);
+  showToast("Instalando, espera un momento...", "info");
+  addLog(`Inicio de la instalación: version=${version}, método=${method}, ruta=${path}, carpeta=${installDir}`);
 
   try {
     const result = await invoke("start_install", { version, method, path, installDir });
     showToast(result, "success");
-    addLog(`安装成功: ${result}`);
+    addLog(`Instalación correcta: ${result}`);
   } catch (e) {
-    showToast(`安装失败: ${e}`, "error");
+    showToast(`Fallo de instalación: ${e}`, "error");
   }
 }
 
@@ -367,7 +367,7 @@ async function doV6LocalInstall(installDir) {
   const mumu15Path = document.getElementById("v6-link-mumu15").value.trim();
 
   if (!nxmainPath && !nemuxPath && !mumu15Path) {
-    showToast("请至少选择一个 V6 组件安装文件路径", "error");
+    showToast("Selecciona al menos la ruta de un archivo de instalación de componente V6", "error");
     return;
   }
 
@@ -394,10 +394,10 @@ async function doV6LocalInstall(installDir) {
   if (nemuxPath) filePaths.push(nemuxPath);
   if (mumu15Path) filePaths.push(mumu15Path);
 
-  addLog(`V6 本地安装: ${filePaths.length} 个组件文件`);
+  addLog(`V6 instalación local: ${filePaths.length} archivos de componente`);
   showInlineProgress();
   installProgressPhase = "install";
-  updateInlineProgress(0, "安装中...", "正在静默安装，请稍候...");
+  updateInlineProgress(0, "Instalando...", "Instalando en segundo plano, espera un momento...");
   startSimulatedInstallProgress();
 
   try {
@@ -408,12 +408,12 @@ async function doV6LocalInstall(installDir) {
       productVersion,
     });
     finishInstallProgress();
-    showToast(`V6 安装成功！`, "success");
-    addLog(`V6 安装成功: ${result}`);
+    showToast(`V6 instalado correctamente!`, "success");
+    addLog(`V6 instalado correctamente: ${result}`);
     refreshMuMuInfoAfterInstall();
   } catch (e) {
     hideInlineProgress();
-    showToast(`V6 安装失败: ${e}`, "error");
+    showToast(`V6 fallo de instalación: ${e}`, "error");
   }
 }
 
@@ -428,8 +428,8 @@ async function doOnlineInstall(version, path, installDir) {
   } catch (e) { }
   if (!downloadDir) downloadDir = "./download";
 
-  showToast(`正在准备 ${version} 在线安装...`, "info");
-  addLog(`开始 ${version} 在线安装流程: 下载目录=${downloadDir}, 安装目录=${installDir}`);
+  showToast(`Preparando la instalación en línea de ${version}...`, "info");
+  addLog(`Inicio del proceso de instalación en línea de ${version}: carpeta de descarga=${downloadDir}, carpeta de instalación=${installDir}`);
 
   showInlineProgress();
   installProgressPhase = "download";
@@ -448,7 +448,7 @@ async function doV6OnlineInstall(version, downloadDir, installDir) {
   const mumu15Link = document.getElementById("v6-link-mumu15").value.trim();
 
   if (!nxmainLink && !nemuxLink && !mumu15Link) {
-    showToast("请至少输入一个 V6 组件链接，或点击 [获取] 按钮自动填充", "error");
+    showToast("Introduce al menos el enlace de un componente V6, o pulsa el boton [Obtener] para rellenarlo automaticamente", "error");
     hideInlineProgress();
     return;
   }
@@ -484,7 +484,7 @@ async function doV6OnlineInstall(version, downloadDir, installDir) {
   window._v6Components = components;
   window._v6Version = productVersion;
 
-  addLog(`V6 在线安装: ${components.length} 个组件, product_version=${productVersion}`);
+  addLog(`V6 instalación en línea: ${components.length} componentes, product_version=${productVersion}`);
 
   try {
     downloadState.active = true;
@@ -499,11 +499,11 @@ async function doV6OnlineInstall(version, downloadDir, installDir) {
       componentsJson: JSON.stringify(components),
       resume: false,
     });
-    addLog(`V6 所有组件下载完成`);
+    addLog(`Descarga de todos los componentes V6 completada`);
 
     installProgressPhase = "install";
     document.getElementById("install-progress-actions").style.display = "none";
-    updateInlineProgress(60, "安装中...", "正在静默安装，请稍候...");
+    updateInlineProgress(60, "Instalando...", "Instalando en segundo plano, espera un momento...");
     startSimulatedInstallProgress();
 
     const result = await invoke("install_v6_setup", {
@@ -513,8 +513,8 @@ async function doV6OnlineInstall(version, downloadDir, installDir) {
       productVersion,
     });
     finishInstallProgress();
-    showToast(`${version} 安装成功！`, "success");
-    addLog(`${version} 安装成功: ${result}`);
+    showToast(`${version} instalado correctamente!`, "success");
+    addLog(`${version} instalado correctamente: ${result}`);
     downloadState.active = false;
     refreshMuMuInfoAfterInstall();
   } catch (e) {
@@ -524,7 +524,7 @@ async function doV6OnlineInstall(version, downloadDir, installDir) {
 
 async function doV4V5OnlineInstall(version, path, downloadDir, installDir) {
   if (!path) {
-    showToast("输入安装包下载链接，或点击 [获取] 按钮自动填充", "error");
+    showToast("Introduce el enlace de descarga del instalador, o pulsa el boton [Obtener] para rellenarlo automaticamente", "error");
     hideInlineProgress();
     return;
   }
@@ -542,18 +542,18 @@ async function doV4V5OnlineInstall(version, path, downloadDir, installDir) {
       version,
       resume: false,
     });
-    addLog(`${version} 安装包下载完成: ${installerPath}`);
-    showToast("下载完成，正在静默安装...", "info");
+    addLog(`Descarga del instalador ${version} completada: ${installerPath}`);
+    showToast("Descarga completada, instalando en segundo plano...", "info");
 
     installProgressPhase = "install";
     document.getElementById("install-progress-actions").style.display = "none";
-    updateInlineProgress(60, "安装中...", "正在静默安装，请稍候...");
+    updateInlineProgress(60, "Instalando...", "Instalando en segundo plano, espera un momento...");
     startSimulatedInstallProgress();
 
     const result = await invoke("install_v4_setup", { installerPath, installDir });
     finishInstallProgress();
-    showToast(`${version} 安装成功！`, "success");
-    addLog(`${version} 安装成功: ${result}`);
+    showToast(`${version} instalado correctamente!`, "success");
+    addLog(`${version} instalado correctamente: ${result}`);
     downloadState.active = false;
     refreshMuMuInfoAfterInstall();
   } catch (e) {
@@ -561,7 +561,7 @@ async function doV4V5OnlineInstall(version, path, downloadDir, installDir) {
   }
 }
 
-// 安装方式 UI 切换
+// Cambio de método de instalación en la interfaz
 
 export function updateInstallMethodUI() {
   const version = document.getElementById("select-version").value;
@@ -586,23 +586,23 @@ export function updateInstallMethodUI() {
     const browseMumu15 = document.getElementById("btn-v6-browse-mumu15");
 
     if (method === "local") {
-      document.getElementById("v6-link-nxmain").placeholder = "输入 NXMAIN 安装器文件路径";
-      document.getElementById("v6-link-nemux").placeholder = "输入 NEMUX 安装器文件路径";
-      document.getElementById("v6-link-mumu15").placeholder = "输入 MUMU15 安装器文件路径";
+      document.getElementById("v6-link-nxmain").placeholder = "Introduce la ruta del archivo del instalador NXMAIN";
+      document.getElementById("v6-link-nemux").placeholder = "Introduce la ruta del archivo del instalador NEMUX";
+      document.getElementById("v6-link-mumu15").placeholder = "Introduce la ruta del archivo del instalador MUMU15";
       v6FetchActions.style.display = "none";
       browseNxmain.style.display = "";
       browseNemux.style.display = "";
       browseMumu15.style.display = "";
-      addLog("切换安装方式: 本地安装");
+      addLog("Cambio de método de instalación: instalación local");
     } else {
-      document.getElementById("v6-link-nxmain").placeholder = "输入 NXMAIN 下载链接";
-      document.getElementById("v6-link-nemux").placeholder = "输入 NEMUX 下载链接";
-      document.getElementById("v6-link-mumu15").placeholder = "输入 MUMU15 下载链接";
+      document.getElementById("v6-link-nxmain").placeholder = "Introduce el enlace de descarga de NXMAIN";
+      document.getElementById("v6-link-nemux").placeholder = "Introduce el enlace de descarga de NEMUX";
+      document.getElementById("v6-link-mumu15").placeholder = "Introduce el enlace de descarga de MUMU15";
       v6FetchActions.style.display = "";
       browseNxmain.style.display = "none";
       browseNemux.style.display = "none";
       browseMumu15.style.display = "none";
-      addLog("切换安装方式: 在线安装");
+      addLog("Cambio de método de instalación: instalación en línea");
     }
   } else {
     v6LinksGroup.style.display = "none";
@@ -610,23 +610,23 @@ export function updateInstallMethodUI() {
     const browseBtn = document.getElementById("btn-browse-file");
     if (method === "local") {
       pathInput.disabled = false;
-      pathInput.placeholder = "输入本地安装包路径";
+      pathInput.placeholder = "Introduce la ruta del instalador local";
       actionBtn.style.display = "none";
       browseBtn.style.display = "";
-      addLog("切换安装方式: 本地安装");
+      addLog("Cambio de método de instalación: instalación local");
     } else {
       pathInput.disabled = false;
-      pathInput.placeholder = "输入下载链接";
+      pathInput.placeholder = "Introduce el enlace de descarga";
       actionBtn.style.display = "";
       browseBtn.style.display = "none";
-      actionBtn.textContent = "获取";
+      actionBtn.textContent = "Obtener";
       actionBtn.onclick = fetchDownloadUrl;
-      addLog("切换安装方式: 在线安装");
+      addLog("Cambio de método de instalación: instalación en línea");
     }
   }
 }
 
-// 下载进度事件处理
+// Gestion de los eventos de progreso de la descarga
 
 export function updateProgress(data) {
   const { status, action, percent, downloaded, total } = data;
@@ -634,7 +634,7 @@ export function updateProgress(data) {
   if (installProgressPhase === "download") {
     const totalPct = Math.round((percent || 0) * 0.6);
     const detail = total > 0 ? `${formatSize(downloaded)} / ${formatSize(total)}` : "";
-    updateInlineProgress(totalPct, action || "下载中...", detail);
+    updateInlineProgress(totalPct, action || "Descargando...", detail);
   } else if (installProgressPhase === "install") {
     if (action) {
       updateInlineProgress(totalProgressPct, action, "");
@@ -642,7 +642,7 @@ export function updateProgress(data) {
   }
 }
 
-// 事件绑定
+// Vinculacion de eventos
 
 export function initInstallPage() {
   document.getElementById("btn-install").addEventListener("click", startInstall);

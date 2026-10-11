@@ -1,42 +1,42 @@
-// 帮助页面
+// Página de ayuda
 
-// 远程页面 URL 映射
+// Mapa de URL de las páginas remotas
 const helpRemoteUrls = {
   official: "https://mumu.163.com/help/win/",
   support: "https://mumu.163.com/redirect/customerservice"
 };
 
-// 记录已加载的 iframe
+// Registro de los iframe ya cargados
 const helpLoadedIframes = { official: false, support: false };
 
 const helpFaqData = [
   {
-    category: "常见问题",
-    question: "安装失败怎么办？",
-    answer: `1. 查看 <strong>日志</strong> 页面中的错误信息<br>
-2. 确保安装目录有充足的存储空间<br>
-3. 确认应用拥有管理员权限<br>
-4. 尝试使用官方安装包和安装器安装<br>
-5. 联系 <strong>官方客服</strong> 以寻求帮助`
+    category: "Preguntas frecuentes",
+    question: "¿Qué hago si la instalación falla?",
+    answer: `1. Consulta el mensaje de error en la página <strong>Registro</strong><br>
+2. Asegúrate de que la carpeta de instalación tenga suficiente espacio libre<br>
+3. Confirma que la aplicación tiene permisos de administrador<br>
+4. Prueba a instalar con el paquete y el instalador oficiales<br>
+5. Contacta con el <strong>servicio de atención oficial</strong> para obtener ayuda`
   },
   {
-    category: "常见问题",
-    question: "为什么需要管理员权限？",
-    answer: `MuTools 的 <strong>大量功能</strong> 需要管理员权限才能正常运行<br>
-非特殊情况请务必给予软件管理员权限`
+    category: "Preguntas frecuentes",
+    question: "¿Por qué se necesitan permisos de administrador?",
+    answer: `Muchas de las <strong>funciones de MuTools</strong> necesitan permisos de administrador para funcionar correctamente<br>
+Salvo casos excepcionales, concede siempre permisos de administrador al programa`
   },
   {
-    category: "常见问题",
-    question: "MuMu模拟器经常卡死、闪退怎么办？",
-    answer: `1.查看官方文档，寻找是否有解决方案<br>
-2.将MuMu升级到最新版<br>
-2.将MuMu回退到旧版本<br>
-4.联系 <strong>官方客服</strong> 以寻求帮助`
+    category: "Preguntas frecuentes",
+    question: "¿Qué hago si el emulador MuMu se bloquea o se cierra solo con frecuencia?",
+    answer: `1. Consulta la documentación oficial para ver si existe una solución<br>
+2. Actualiza MuMu a la última versión<br>
+2. Vuelve a una versión anterior de MuMu<br>
+4. Contacta con el <strong>servicio de atención oficial</strong> para obtener ayuda`
   },
   {
-    category: "常见问题",
-    question: "MuMu模拟器安装卡98%怎么办？",
-    answer: `安装进度条是模拟的，卡98%意味着安装未完成`
+    category: "Preguntas frecuentes",
+    question: "¿Qué hago si la instalación del emulador MuMu se queda en el 98%?",
+    answer: `La barra de progreso de la instalación es simulada, quedarse en el 98% significa que la instalación no ha terminado`
   }
 ];
 
@@ -146,7 +146,7 @@ export function initHelpPage() {
   if (categoriesEl) {
     const allTag = document.createElement("button");
     allTag.className = "help-category-tag active";
-    allTag.textContent = "全部";
+    allTag.textContent = "Todas";
     allTag.dataset.category = "all";
     allTag.addEventListener("click", () => filterByCategory("all"));
     categoriesEl.appendChild(allTag);
@@ -194,7 +194,7 @@ export function initHelpPage() {
     });
   }
 
-  // 远程页面 懒加载
+  // Carga diferida de las páginas remotas
   document.querySelectorAll(".help-open-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const type = btn.dataset.helpOpen;   // "official" | "support"
@@ -204,7 +204,7 @@ export function initHelpPage() {
 
       if (mode === "browser") {
         window.__TAURI__.opener.openUrl(url).catch(err => {
-          console.error("无法在浏览器中打开:", err);
+          console.error("No se puede abrir en el navegador:", err);
         });
       } else if (mode === "embed") {
         const placeholder = document.getElementById(`help-placeholder-${type}`);

@@ -1,4 +1,4 @@
-// 设置页面
+// Página de ajustes
 import { showToast } from "./toast.js";
 import { addLog } from "./logger.js";
 import { onAutoRefreshSettingChanged } from "./mumu-info.js";
@@ -34,7 +34,7 @@ export function loadSettings() {
     loadAria2ConfigFromBackend();
     loadAutoDeleteConfigFromBackend();
   } catch (e) {
-    console.error("加载设置失败:", e);
+    console.error("No se pudieron cargar los ajustes:", e);
   }
 }
 
@@ -44,7 +44,7 @@ async function loadAria2ConfigFromBackend() {
     document.getElementById("settings-aria2-connections").value = cfg.maxConnections;
     document.getElementById("settings-aria2-split").value = cfg.split;
   } catch (e) {
-    console.error("加载 aria2 配置失败:", e);
+    console.error("No se pudo cargar la configuración de aria2:", e);
   }
 }
 
@@ -53,7 +53,7 @@ async function loadAutoDeleteConfigFromBackend() {
     const enabled = await invoke("get_auto_delete_installer");
     document.getElementById("settings-auto-delete-installer").checked = enabled;
   } catch (e) {
-    console.error("加载自动删除配置失败:", e);
+    console.error("No se pudo cargar la configuración de eliminación automática:", e);
   }
 }
 
@@ -74,14 +74,14 @@ export function saveSettings() {
   };
   localStorage.setItem("mutools_settings", JSON.stringify(settings));
 
-  invoke("save_data_config", { dataDirMode, dataDirCustom }).catch(e => console.error("保存数据目录配置失败:", e));
-  invoke("save_admin_elevation", { enabled: adminElevation }).catch(e => console.error("保存管理员提权设置失败:", e));
-  invoke("save_aria2_config", { maxConnections: aria2MaxConnections, split: aria2Split }).catch(e => console.error("保存 aria2 配置失败:", e));
-  invoke("save_auto_delete_installer", { enabled: autoDeleteInstaller }).catch(e => console.error("保存自动删除设置失败:", e));
+  invoke("save_data_config", { dataDirMode, dataDirCustom }).catch(e => console.error("No se pudo guardar la configuración de la carpeta de datos:", e));
+  invoke("save_admin_elevation", { enabled: adminElevation }).catch(e => console.error("No se pudo guardar el ajuste de elevación de privilegios:", e));
+  invoke("save_aria2_config", { maxConnections: aria2MaxConnections, split: aria2Split }).catch(e => console.error("No se pudo guardar la configuración de aria2:", e));
+  invoke("save_auto_delete_installer", { enabled: autoDeleteInstaller }).catch(e => console.error("No se pudo guardar el ajuste de eliminación automática:", e));
 
   document.getElementById("install-dir").value = installDir;
 
-  // 自动刷新设置变更
+  // Cambio en el ajuste de actualización automática
   onAutoRefreshSettingChanged();
 
   const prevSettings = (() => {
@@ -89,10 +89,10 @@ export function saveSettings() {
   })();
   const prevElevation = prevSettings.adminElevation !== undefined ? prevSettings.adminElevation : true;
   if (prevElevation !== adminElevation) {
-    showToast("提权设置已保存，重启应用后生效", "info");
-    addLog(`管理员提权设置已切换为: ${adminElevation}（需重启生效）`);
+    showToast("Ajuste de elevación guardado, tendrá efecto al reiniciar la aplicación", "info");
+    addLog(`El ajuste de elevación de privilegios ha cambiado a: ${adminElevation} (requiere reiniciar para tener efecto)`);
   } else {
-    showToast("设置已保存", "success");
+    showToast("Ajustes guardados", "success");
   }
 }
 
@@ -102,30 +102,30 @@ export function updateDataDirCustomUI() {
   customGroup.style.display = mode === "custom" ? "" : "none";
 }
 
-// 管理员权限状态
+// Estado de los permisos de administrador
 
 export async function loadAdminStatus() {
   const valueEl = document.getElementById("admin-status-value");
   if (!valueEl) return;
-  valueEl.textContent = "检测中...";
+  valueEl.textContent = "Detectando...";
   valueEl.className = "admin-status-value unknown";
   try {
     const elevated = await invoke("check_admin_status");
     if (elevated) {
-      valueEl.textContent = "管理员权限";
+      valueEl.textContent = "Permisos de administrador";
       valueEl.className = "admin-status-value elevated";
     } else {
-      valueEl.textContent = "普通权限";
+      valueEl.textContent = "Sin privilegios elevados";
       valueEl.className = "admin-status-value not-elevated";
     }
   } catch (e) {
-    valueEl.textContent = "检测失败";
+    valueEl.textContent = "Error de detección";
     valueEl.className = "admin-status-value unknown";
-    console.error("检测管理员状态失败:", e);
+    console.error("No se pudo detectar el estado de administrador:", e);
   }
 }
 
-// 事件绑定
+// Vinculación de eventos
 
 export function initSettingsPage() {
   document.getElementById("btn-save-settings").addEventListener("click", saveSettings);

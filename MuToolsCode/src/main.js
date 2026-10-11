@@ -1,4 +1,4 @@
-﻿// 主入口
+// Punto de entrada principal
 import { addLog, loadBackendLogs, clearLogs } from "./js/logger.js";
 import { showToast } from "./js/toast.js";
 import { getDailyQuote, onVersionClick } from "./js/daily-quotes.js";
@@ -14,36 +14,36 @@ import { initAboutPage } from "./js/about.js";
 const { invoke } = window.__TAURI__.core;
 
 window.addEventListener("DOMContentLoaded", () => {
-  addLog("应用启动");
+  addLog("Aplicación iniciada");
 
-  // 监听后端下载进度事件
+  // Escucha el evento de progreso de descarga del backend
   const { listen } = window.__TAURI__.event;
   listen("download-progress", (event) => {
     updateProgress(event.payload);
   }).catch(() => {});
 
-  // 监听后端 toast 通知事件
+  // Escucha el evento de aviso toast del backend
   listen("toast", (event) => {
     const payload = event.payload;
     if (typeof payload === "string") {
       showToast(payload, "info");
     } else if (payload && typeof payload === "object") {
-      const msg = payload.message || payload.msg || "通知";
+      const msg = payload.message || payload.msg || "Notificación";
       const type = payload.type || "info";
       showToast(msg, type);
     }
   }).catch(() => {});
 
-  // 加载设置
+  // Carga los ajustes
   loadSettings();
   loadAdminStatus();
 
-  // 获取数据目录
+  // Obtiene la carpeta de datos
   invoke("get_data_dir").then(dataDir => {
-    addLog(`数据目录: ${dataDir}`);
+    addLog(`Carpeta de datos: ${dataDir}`);
   }).catch(() => {});
 
-  // 从设置恢复安装目录
+  // Restaura la carpeta de instalación desde los ajustes
   const savedSettings = localStorage.getItem("mutools_settings");
   if (savedSettings) {
     try {
@@ -52,28 +52,28 @@ window.addEventListener("DOMContentLoaded", () => {
     } catch (e) {}
   }
 
-  // 导航
+  // Navegación
   document.querySelectorAll(".nav-item").forEach((item) => {
     item.addEventListener("click", () => {
       switchPage(item.dataset.page);
     });
   });
 
-  // 初始化各页面事件绑定
+  // Inicializa el enlace de eventos de cada página
   initInstallPage();
   initSettingsPage();
   initPackagesPage();
   initMuMuInfoPage();
   initOptimizePage();
 
-  // 日志按钮
+  // Botón de registro
   document.getElementById("btn-refresh-logs").addEventListener("click", () => {
     loadBackendLogs();
-    addLog("刷新日志");
+    addLog("Actualizar registro");
   });
   document.getElementById("btn-clear-logs").addEventListener("click", clearLogs);
 
-  // 自动刷新开关
+  // Interruptor de actualización automática
   const autoRefreshCheckbox = document.getElementById("settings-auto-refresh-mumu");
   if (autoRefreshCheckbox) {
     autoRefreshCheckbox.addEventListener("change", () => {
@@ -86,10 +86,10 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 启动自动刷新
+  // Inicia la actualización automática
   startMuMuAutoRefresh();
 
-  // 每日一句
+  // Frase del día
   const quoteEl = document.getElementById("daily-quote-text");
   const quoteBox = document.querySelector(".daily-quote");
   if (quoteEl) {
@@ -103,15 +103,15 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 关于页面版本号彩蛋
+  // Huevo de pascua del número de versión en la página Acerca de
   const versionEl = document.getElementById("about-version");
   if (versionEl) {
     versionEl.addEventListener("click", onVersionClick);
   }
 
-  // 帮助页面
+  // Página de ayuda
   initHelpPage();
 
-  // 关于页面
+  // Página Acerca de
   initAboutPage();
 });

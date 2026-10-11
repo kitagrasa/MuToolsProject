@@ -43,14 +43,14 @@ pub struct DescInfo {
     pub builder: String,
     pub description: String,
     pub time: f64,
-    // desc 文件可能使用 display_version 或 file_version，通过 alias 兼容
+    // El archivo desc puede usar display_version o file_version; se admite mediante alias
     #[serde(alias = "display_version", alias = "file_version")]
     pub display_version: String,
     #[serde(alias = "build_version")]
     pub build_version: String,
     #[serde(alias = "file_list")]
     pub file_list: Vec<FileListEntry>,
-    /// 对应的 .desc 文件名，用于删除单个子包时定位
+    /// Nombre del archivo .desc correspondiente, usado para localizar cada subpaquete
     #[serde(skip_deserializing)]
     pub desc_file: String,
 }
@@ -102,7 +102,7 @@ fn sanitize_entry_path(root: &Path, entry_path: &Path) -> Result<PathBuf, String
         }
     }
     if clean.as_os_str().is_empty() {
-        return Err("无效的压缩包路径".to_string());
+        return Err("Ruta de archivo comprimido no válida".to_string());
     }
     Ok(root.join(clean))
 }
@@ -110,7 +110,7 @@ fn sanitize_entry_path(root: &Path, entry_path: &Path) -> Result<PathBuf, String
 pub fn extract_7z(archive_path: &Path, dest_dir: &Path, resource_dir: &Path) -> Result<(), String> {
     let seven_zip = resource_dir.join("7zip").join("7z.exe");
     if !seven_zip.exists() {
-        return Err("7z.exe 未找到，请先安装 7zip 资源包".to_string());
+        return Err("No se encontró 7z.exe; instale primero el paquete de recursos 7zip".to_string());
     }
     let output = std::process::Command::new(&seven_zip)
         .args(["x", "-y"])
@@ -118,11 +118,11 @@ pub fn extract_7z(archive_path: &Path, dest_dir: &Path, resource_dir: &Path) -> 
         .arg(archive_path.to_string_lossy().to_string())
         .creation_flags(CREATE_NO_WINDOW)
         .output()
-        .map_err(|e| format!("执行7z解压失败: {}", e))?;
+        .map_err(|e| format!("Error al ejecutar la descompresión con 7z: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("7z解压失败: {}", stderr));
+        return Err(format!("Error al descomprimir con 7z: {}", stderr));
     }
     Ok(())
 }
@@ -157,24 +157,24 @@ pub fn handle_single_top_dir(dir: &Path) {
 }
 
 pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<(), String> {
-    let file = fs::File::open(zip_path).map_err(|e| format!("无法打开压缩包: {}", e))?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("无法解析压缩包: {}", e))?;
+    let file = fs::File::open(zip_path).map_err(|e| format!("No se pudo abrir el archivo comprimido: {}", e))?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("No se pudo analizar el archivo comprimido: {}", e))?;
     for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).map_err(|e| format!("读取压缩包条目失败: {}", e))?;
+        let mut entry = archive.by_index(i).map_err(|e| format!("Error al leer la entrada del archivo comprimido: {}", e))?;
         let entry_path = PathBuf::from(entry.name());
         let out_path = sanitize_entry_path(dest_dir, &entry_path)?;
         if !out_path.starts_with(dest_dir) {
-            return Err("压缩包路径越界".to_string());
+            return Err("La ruta del archivo comprimido está fuera del destino".to_string());
         }
         if entry.is_dir() {
-            fs::create_dir_all(&out_path).map_err(|e| format!("创建目录失败: {}", e))?;
+            fs::create_dir_all(&out_path).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
         } else {
             if let Some(parent) = out_path.parent() {
-                fs::create_dir_all(parent).map_err(|e| format!("创建父目录失败: {}", e))?;
+                fs::create_dir_all(parent).map_err(|e| format!("Error al crear la carpeta principal: {}", e))?;
             }
             let mut buffer = Vec::new();
-            entry.read_to_end(&mut buffer).map_err(|e| format!("读取压缩内容失败: {}", e))?;
-            fs::write(&out_path, buffer).map_err(|e| format!("写入文件失败: {}", e))?;
+            entry.read_to_end(&mut buffer).map_err(|e| format!("Error al leer el contenido comprimido: {}", e))?;
+            fs::write(&out_path, buffer).map_err(|e| format!("Error al escribir el archivo: {}", e))?;
         }
     }
     Ok(())
@@ -224,7 +224,7 @@ pub fn read_desc_files(dir: &Path) -> Vec<DescInfo> {
             }
         }
     }
-    // 支持展示多个同名称的信息，不过滤重复
+    // Se permiten varias entradas con el mismo nombre, sin filtrar duplicados
     list
 }
 
@@ -253,7 +253,7 @@ pub fn make_package_detail(dir: &Path) -> PackageDetail {
 #[tauri::command]
 pub fn list_resource_packages(state: tauri::State<AppState>) -> Result<Vec<PackageDetail>, String> {
     let dir = &state.resource_dir;
-    fs::create_dir_all(dir).map_err(|e| format!("无法创建资源目录: {}", e))?;
+    fs::create_dir_all(dir).map_err(|e| format!("No se pudo crear la carpeta de recursos: {}", e))?;
     let mut list = Vec::new();
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
@@ -271,13 +271,13 @@ pub fn list_resource_packages(state: tauri::State<AppState>) -> Result<Vec<Packa
 pub fn install_resource_from_path(state: tauri::State<AppState>, source_path: String) -> Result<PackageDetail, String> {
     let src = PathBuf::from(&source_path);
     if !src.exists() {
-        return Err(format!("路径不存在: {}", source_path));
+        return Err(format!("La ruta no existe: {}", source_path));
     }
     let rd = &state.resource_dir;
-    fs::create_dir_all(rd).map_err(|e| format!("无法创建资源目录: {}", e))?;
+    fs::create_dir_all(rd).map_err(|e| format!("No se pudo crear la carpeta de recursos: {}", e))?;
 
     if src.is_dir() {
-        return Err("不支持从文件夹安装资源包，选择压缩包文件".to_string());
+        return Err("No se admite instalar paquetes de recursos desde una carpeta; seleccione un archivo comprimido".to_string());
     }
 
     let ext = src.extension().and_then(|e| e.to_str().map(|s| s.to_lowercase())).unwrap_or_default();
@@ -288,8 +288,8 @@ pub fn install_resource_from_path(state: tauri::State<AppState>, source_path: St
     match ext.as_str() {
         "zip" => {
             if dest.exists() { fs::remove_dir_all(&dest).ok(); }
-            fs::create_dir_all(&dest).map_err(|e| format!("创建目录失败: {}", e))?;
-            extract_zip(&src, &dest).map_err(|e| format!("解压失败: {}", e))?;
+            fs::create_dir_all(&dest).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
+            extract_zip(&src, &dest).map_err(|e| format!("Error al descomprimir: {}", e))?;
             handle_single_top_dir(&dest);
             if !dest.join("manifest.json").exists() {
                 write_manifest(&dest, &folder_name);
@@ -298,23 +298,23 @@ pub fn install_resource_from_path(state: tauri::State<AppState>, source_path: St
         }
         "7z" => {
             if dest.exists() { fs::remove_dir_all(&dest).ok(); }
-            fs::create_dir_all(&dest).map_err(|e| format!("创建目录失败: {}", e))?;
-            extract_7z(&src, &dest, rd).map_err(|e| format!("解压失败: {}", e))?;
+            fs::create_dir_all(&dest).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
+            extract_7z(&src, &dest, rd).map_err(|e| format!("Error al descomprimir: {}", e))?;
             handle_single_top_dir(&dest);
-            // 检查是否为7zip或aria2资源包，生成对应信息
+            // Comprueba si es un paquete de recursos 7zip o aria2 y genera la información correspondiente
             let is_7zip_related = folder_name.to_lowercase().contains("7zip") || folder_name.to_lowercase().contains("7z");
             let is_aria2_related = folder_name.to_lowercase().contains("aria2");
             if is_7zip_related || is_aria2_related {
                 let m = if is_7zip_related {
                     ManifestInfo {
                         name: "7zip".to_string(),
-                        description: "7-Zip 命令行工具".to_string(),
+                        description: "Herramienta de línea de comandos 7-Zip".to_string(),
                         webpage: String::new(),
                     }
                 } else {
                     ManifestInfo {
                         name: "aria2".to_string(),
-                        description: "aria2 下载工具".to_string(),
+                        description: "Herramienta de descarga aria2".to_string(),
                         webpage: String::new(),
                     }
                 };
@@ -323,35 +323,35 @@ pub fn install_resource_from_path(state: tauri::State<AppState>, source_path: St
                     let _ = fs::write(&manifest_path, content);
                 }
             } else if !dest.join("manifest.json").exists() {
-                // 不自动生成manifest
+                // No se genera el manifest automáticamente
             }
             Ok(make_package_detail(&dest))
         }
         "exe" => {
-            // exe 自解压包
+            // Paquete exe autoextraíble
             let dest = rd.clone();
-            log::info!("自解压 exe: \"{}\" -y -o{}", src.display(), dest.display());
+            log::info!("exe autoextraíble: \"{}\" -y -o{}", src.display(), dest.display());
             let output = std::process::Command::new(&src)
                 .arg("-y")
                 .arg(format!("-o{}", dest.to_string_lossy()))
                 .creation_flags(CREATE_NO_WINDOW)
                 .output()
-                .map_err(|e| format!("执行自解压失败: {}", e))?;
+                .map_err(|e| format!("Error al ejecutar la autoextracción: {}", e))?;
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                log::error!("自解压失败: {}", stderr);
-                return Err(format!("自解压失败: {}", stderr));
+                log::error!("Error en la autoextracción: {}", stderr);
+                return Err(format!("Error en la autoextracción: {}", stderr));
             }
-            // 解压到 resources 根目录，不调用 handle_single_top_dir（根目录有多个子目录）
-            // 也不写入 manifest.json，避免污染 resources 根目录
+            // Se descomprime en la raíz de resources sin llamar a handle_single_top_dir (la raíz tiene varias subcarpetas)
+            // Tampoco se escribe manifest.json para no contaminar la raíz de resources
             Ok(make_package_detail(&dest))
         }
         _ => {
-            // 其他文件
+            // Otros archivos
             if dest.exists() { fs::remove_dir_all(&dest).ok(); }
-            fs::create_dir_all(&dest).map_err(|e| format!("创建目录失败: {}", e))?;
+            fs::create_dir_all(&dest).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
             let dest_file = dest.join(src.file_name().unwrap_or_default());
-            fs::copy(&src, &dest_file).map_err(|e| format!("复制文件失败: {}", e))?;
+            fs::copy(&src, &dest_file).map_err(|e| format!("Error al copiar el archivo: {}", e))?;
             if !dest.join("manifest.json").exists() {
                 write_manifest(&dest, &folder_name);
             }
@@ -379,7 +379,7 @@ fn copy_dir(src: &Path, dst: &Path) -> std::io::Result<()> {
 #[tauri::command]
 pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: String) -> Result<PackageDetail, String> {
     let rd = &state.resource_dir;
-    fs::create_dir_all(rd).map_err(|e| format!("无法创建资源目录: {}", e))?;
+    fs::create_dir_all(rd).map_err(|e| format!("No se pudo crear la carpeta de recursos: {}", e))?;
 
     let filename = url.split('?').next().and_then(|value| value.rsplit('/').next())
         .filter(|name| !name.is_empty())
@@ -419,15 +419,15 @@ pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: S
 
     if !used_aria2 {
         let client = reqwest::Client::new();
-        let resp = client.get(&url).send().await.map_err(|e| format!("下载请求失败: {}", e))?;
+        let resp = client.get(&url).send().await.map_err(|e| format!("Error en la solicitud de descarga: {}", e))?;
         if !resp.status().is_success() {
-            return Err(format!("下载失败: HTTP {}", resp.status()));
+            return Err(format!("Error de descarga: HTTP {}", resp.status()));
         }
-        let mut out = fs::File::create(&tmp_file).map_err(|e| format!("创建临时文件失败: {}", e))?;
+        let mut out = fs::File::create(&tmp_file).map_err(|e| format!("Error al crear el archivo temporal: {}", e))?;
         let mut stream = resp.bytes_stream();
         while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| format!("下载数据失败: {}", e))?;
-            out.write_all(&chunk).map_err(|e| format!("写入文件失败: {}", e))?;
+            let chunk = chunk.map_err(|e| format!("Error al descargar los datos: {}", e))?;
+            out.write_all(&chunk).map_err(|e| format!("Error al escribir el archivo: {}", e))?;
         }
     }
 
@@ -436,8 +436,8 @@ pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: S
     if dest.exists() { fs::remove_dir_all(&dest).ok(); }
 
     if safe_filename.ends_with(".zip") {
-        fs::create_dir_all(&dest).map_err(|e| format!("创建目录失败: {}", e))?;
-        extract_zip(&tmp_file, &dest).map_err(|e| format!("解压失败: {}", e))?;
+        fs::create_dir_all(&dest).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
+        extract_zip(&tmp_file, &dest).map_err(|e| format!("Error al descomprimir: {}", e))?;
         handle_single_top_dir(&dest);
         fs::remove_file(&tmp_file).ok();
         if !dest.join("manifest.json").exists() {
@@ -445,8 +445,8 @@ pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: S
         }
         Ok(make_package_detail(&dest))
     } else if safe_filename.ends_with(".7z") {
-        fs::create_dir_all(&dest).map_err(|e| format!("创建目录失败: {}", e))?;
-        extract_7z(&tmp_file, &dest, rd).map_err(|e| format!("解压失败: {}", e))?;
+        fs::create_dir_all(&dest).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
+        extract_7z(&tmp_file, &dest, rd).map_err(|e| format!("Error al descomprimir: {}", e))?;
         handle_single_top_dir(&dest);
         fs::remove_file(&tmp_file).ok();
         let is_7zip_related = folder_name.to_lowercase().contains("7zip") || folder_name.to_lowercase().contains("7z");
@@ -455,13 +455,13 @@ pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: S
             let m = if is_7zip_related {
                 ManifestInfo {
                     name: "7zip".to_string(),
-                    description: "7-Zip 命令行工具".to_string(),
+                    description: "Herramienta de línea de comandos 7-Zip".to_string(),
                     webpage: String::new(),
                 }
             } else {
                 ManifestInfo {
                     name: "aria2".to_string(),
-                    description: "aria2 下载工具".to_string(),
+                    description: "Herramienta de descarga aria2".to_string(),
                     webpage: String::new(),
                 }
             };
@@ -472,29 +472,29 @@ pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: S
         }
         Ok(make_package_detail(&dest))
     } else if safe_filename.ends_with(".exe") {
-        // exe 自解压包
+        // Paquete exe autoextraíble
         let dest = rd.clone();
-        log::info!("自解压 exe: \"{}\" -y -o{}", tmp_file.display(), dest.display());
+        log::info!("exe autoextraíble: \"{}\" -y -o{}", tmp_file.display(), dest.display());
         let output = std::process::Command::new(&tmp_file)
             .arg("-y")
             .arg(format!("-o{}", dest.to_string_lossy()))
             .creation_flags(CREATE_NO_WINDOW)
             .output()
-            .map_err(|e| format!("执行自解压失败: {}", e))?;
+            .map_err(|e| format!("Error al ejecutar la autoextracción: {}", e))?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            log::error!("自解压失败: {}", stderr);
+            log::error!("Error en la autoextracción: {}", stderr);
             fs::remove_file(&tmp_file).ok();
-            return Err(format!("自解压失败: {}", stderr));
+            return Err(format!("Error en la autoextracción: {}", stderr));
         }
         fs::remove_file(&tmp_file).ok();
-        // 解压到 resources 根目录，不调用 handle_single_top_dir（根目录有多个子目录）
-        // 也不写入 manifest.json，避免污染 resources 根目录
+        // Se descomprime en la raíz de resources sin llamar a handle_single_top_dir (la raíz tiene varias subcarpetas)
+        // Tampoco se escribe manifest.json para no contaminar la raíz de resources
         Ok(make_package_detail(&dest))
     } else {
-        fs::create_dir_all(&dest).map_err(|e| format!("创建目录失败: {}", e))?;
+        fs::create_dir_all(&dest).map_err(|e| format!("Error al crear la carpeta: {}", e))?;
         let dest_file = dest.join(&safe_filename);
-        fs::copy(&tmp_file, &dest_file).map_err(|e| format!("复制文件失败: {}", e))?;
+        fs::copy(&tmp_file, &dest_file).map_err(|e| format!("Error al copiar el archivo: {}", e))?;
         fs::remove_file(&tmp_file).ok();
         if !dest.join("manifest.json").exists() {
             write_manifest(&dest, &folder_name);
@@ -507,12 +507,12 @@ pub async fn install_resource_from_url(state: tauri::State<'_, AppState>, url: S
 pub fn delete_resource_package(state: tauri::State<AppState>, name: String) -> Result<(), String> {
     let target = state.resource_dir.join(&name);
     if !target.exists() {
-        return Err(format!("资源包不存在: {}", name));
+        return Err(format!("El paquete de recursos no existe: {}", name));
     }
     if target.is_dir() {
-        fs::remove_dir_all(&target).map_err(|e| format!("删除目录失败: {}", e))?;
+        fs::remove_dir_all(&target).map_err(|e| format!("Error al eliminar la carpeta: {}", e))?;
     } else {
-        fs::remove_file(&target).map_err(|e| format!("删除文件失败: {}", e))?;
+        fs::remove_file(&target).map_err(|e| format!("Error al eliminar el archivo: {}", e))?;
     }
     Ok(())
 }
@@ -521,13 +521,13 @@ pub fn delete_resource_package(state: tauri::State<AppState>, name: String) -> R
 pub fn delete_sub_package(state: tauri::State<AppState>, package_name: String, desc_file: String) -> Result<(), String> {
     let pkg_dir = state.resource_dir.join(&package_name);
     if !pkg_dir.is_dir() {
-        return Err(format!("资源包不存在: {}", package_name));
+        return Err(format!("El paquete de recursos no existe: {}", package_name));
     }
     let desc_path = pkg_dir.join(&desc_file);
     if !desc_path.exists() {
-        return Err(format!("描述文件不存在: {}", desc_file));
+        return Err(format!("El archivo de descripción no existe: {}", desc_file));
     }
-    // 读取desc文件，找到关联的数据文件
+    // Lee el archivo desc y localiza los archivos de datos asociados
     let data_files: Vec<String> = if let Ok(content) = fs::read_to_string(&desc_path) {
         if let Ok(di) = serde_json::from_str::<DescInfo>(&content) {
             di.file_list.iter().map(|f| f.filename.clone()).collect()
@@ -537,19 +537,19 @@ pub fn delete_sub_package(state: tauri::State<AppState>, package_name: String, d
     } else {
         Vec::new()
     };
-    // 删除数据文件
+    // Elimina los archivos de datos
     for df in &data_files {
         let df_path = pkg_dir.join(df);
         if df_path.exists() {
             if df_path.is_dir() {
-                fs::remove_dir_all(&df_path).map_err(|e| format!("删除数据文件失败: {}: {}", df, e))?;
+                fs::remove_dir_all(&df_path).map_err(|e| format!("Error al eliminar el archivo de datos: {}: {}", df, e))?;
             } else {
-                fs::remove_file(&df_path).map_err(|e| format!("删除数据文件失败: {}: {}", df, e))?;
+                fs::remove_file(&df_path).map_err(|e| format!("Error al eliminar el archivo de datos: {}: {}", df, e))?;
             }
         }
     }
-    // 删除 desc 文件本身
-    fs::remove_file(&desc_path).map_err(|e| format!("删除描述文件失败: {}", e))?;
+    // Elimina el propio archivo desc
+    fs::remove_file(&desc_path).map_err(|e| format!("Error al eliminar el archivo de descripción: {}", e))?;
     Ok(())
 }
 
@@ -559,10 +559,10 @@ pub fn open_resource_dir(app: tauri::AppHandle, name: String) -> Result<(), Stri
     let rd = app.state::<AppState>().resource_dir.clone();
     let path = if name.is_empty() { rd } else { rd.join(&name) };
     if !path.exists() {
-        return Err(format!("路径不存在: {}", path.display()));
+        return Err(format!("La ruta no existe: {}", path.display()));
     }
     app.opener().open_path(path.to_string_lossy().to_string(), None::<&str>)
-        .map_err(|e| format!("无法打开: {}", e))?;
+        .map_err(|e| format!("No se pudo abrir: {}", e))?;
     Ok(())
 }
 
@@ -570,6 +570,6 @@ pub fn open_resource_dir(app: tauri::AppHandle, name: String) -> Result<(), Stri
 pub fn open_url(app: tauri::AppHandle, url: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     app.opener().open_url(url, None::<&str>)
-        .map_err(|e| format!("无法打开链接: {}", e))?;
+        .map_err(|e| format!("No se pudo abrir el enlace: {}", e))?;
     Ok(())
 }

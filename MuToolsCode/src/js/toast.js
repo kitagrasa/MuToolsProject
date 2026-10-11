@@ -1,4 +1,4 @@
-// Toast 悬浮提示 & 工具函数
+// Aviso flotante toast y funciones de utilidad
 import { addLog } from "./logger.js";
 
 export function showToast(msg, type) {

@@ -37,7 +37,7 @@ pub struct DownloadLink {
     pub checksum: String,
 }
 
-// V6 API 响应结构
+// Estructura de respuesta de la API V6
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct V6DownloadResponse {
@@ -68,7 +68,7 @@ pub struct V6Component {
     pub size: i64,
 }
 
-// 全局下载控制标志
+// Indicadores globales de control de descarga
 
 static DOWNLOAD_CANCELLED: AtomicBool = AtomicBool::new(false);
 static DOWNLOAD_PAUSED: AtomicBool = AtomicBool::new(false);
@@ -87,35 +87,35 @@ pub fn cancel_download() -> Result<(), String> {
             .creation_flags(CREATE_NO_WINDOW)
             .output();
     }
-    // 等待aria2/reqwest进程完全退出释放文件句柄
+    // Esperar a que los procesos aria2/reqwest terminen por completo y liberen los descriptores de archivo
     std::thread::sleep(std::time::Duration::from_millis(200));
-    // 删除所有已下载的部分文件
+    // Eliminar todos los archivos parciales ya descargados
     let files = PARTIAL_FILES.lock().unwrap().clone();
     for f in &files {
         if f.exists() {
-            // 重试
+            // Reintentar
             let mut removed = false;
             for _attempt in 0..3 {
                 match fs::remove_file(f) {
                     Ok(()) => {
-                        log::info!("已删除取消下载的文件: {}", f.display());
+                        log::info!("Se elimino el archivo de la descarga cancelada: {}", f.display());
                         removed = true;
                         break;
                     }
                     Err(e) => {
-                        log::warn!("删除文件失败(将重试): {} - {}", f.display(), e);
+                        log::warn!("No se pudo eliminar el archivo (se reintentara): {} - {}", f.display(), e);
                         std::thread::sleep(std::time::Duration::from_millis(200));
                     }
                 }
             }
             if !removed {
-                // 最后一次尝试
-                log::error!("无法删除文件: {}", f.display());
+                // Último intento
+                log::error!("No se puede eliminar el archivo: {}", f.display());
             }
         }
     }
     PARTIAL_FILES.lock().unwrap().clear();
-    log::info!("下载已取消");
+    log::info!("Descarga cancelada");
     Ok(())
 }
 
@@ -130,18 +130,18 @@ pub fn pause_download() -> Result<(), String> {
             .creation_flags(CREATE_NO_WINDOW)
             .output();
     }
-    log::info!("下载已暂停");
+    log::info!("Descarga pausada");
     Ok(())
 }
 
 #[tauri::command]
 pub fn resume_download() -> Result<(), String> {
     DOWNLOAD_PAUSED.store(false, Ordering::SeqCst);
-    log::info!("下载已恢复");
+    log::info!("Descarga reanudada");
     Ok(())
 }
 
-// 版本下载链接获取
+// Obtencion de enlaces de descarga por version
 
 #[tauri::command]
 pub async fn fetch_download_url(version: String) -> Result<String, String> {
@@ -149,9 +149,9 @@ pub async fn fetch_download_url(version: String) -> Result<String, String> {
         "MuMu12-V4" => fetch_download_url_v4_inner().await?,
         "MuMu12-V5" => fetch_download_url_v5_inner().await?,
         "MuMu12-V6" => fetch_download_url_v6_inner().await?,
-        _ => return Err("仅支持MuMu-V4V5V6版本获取".to_string()),
+        _ => return Err("Solo se admite la obtencion de enlaces para las versiones MuMu-V4V5V6".to_string()),
     };
-    log::info!("获取 {} 下载链接成功: {}", version, link);
+    log::info!("Enlace de descarga de {} obtenido correctamente: {}", version, link);
     Ok(link)
 }
 
@@ -163,7 +163,7 @@ pub async fn browse_directory(app: tauri::AppHandle) -> Result<Option<String>, S
     app.dialog().file().pick_folder(move |d| {
         let _ = tx.send(d.and_then(|d| d.as_path().map(|p| p.to_string_lossy().to_string())));
     });
-    let result = rx.recv().map_err(|e| format!("对话框错误: {}", e))?;
+    let result = rx.recv().map_err(|e| format!("Error del cuadro de dialogo: {}", e))?;
     Ok(result)
 }
 
@@ -174,11 +174,11 @@ pub async fn browse_file(app: tauri::AppHandle) -> Result<Option<String>, String
     let (tx, rx) = mpsc::channel();
     app.dialog()
         .file()
-        .add_filter("安装包", &["exe", "7z", "zip", "rar", "mumudata"])
+        .add_filter("Paquete de instalación", &["exe", "7z", "zip", "rar", "mumudata"])
         .pick_file(move |d| {
             let _ = tx.send(d.and_then(|d| d.as_path().map(|p| p.to_string_lossy().to_string())));
         });
-    let result = rx.recv().map_err(|e| format!("对话框错误: {}", e))?;
+    let result = rx.recv().map_err(|e| format!("Error del cuadro de dialogo: {}", e))?;
     Ok(result)
 }
 
@@ -190,19 +190,19 @@ pub fn start_install(
     install_dir: String,
 ) -> Result<String, String> {
     let method_str = if method == "local" {
-        "本地安装"
+        "Instalación local"
     } else {
-        "在线安装"
+        "Instalación en línea"
     };
     let msg = format!(
-        "{} {} 安装任务已开始\n安装包路径: {}\n安装目录: {}",
+        "La tarea de instalación de {} {} ha comenzado\nRuta del paquete de instalación: {}\nCarpeta de instalación: {}",
         version, method_str, path, install_dir
     );
     log::info!("{}", msg);
     Ok(msg)
 }
 
-/// 查找 aria2c 可执行文件路径
+/// Busca la ruta del ejecutable aria2c
 fn find_aria2(resource_dir: &PathBuf) -> Option<PathBuf> {
     let mut candidates = vec![resource_dir.join("aria2")];
 
@@ -238,7 +238,7 @@ fn find_aria2(resource_dir: &PathBuf) -> Option<PathBuf> {
         .find(|path| path.is_file())
 }
 
-/// 发送下载进度事件
+/// Envia un evento de progreso de descarga
 fn emit_progress(
     app: &tauri::AppHandle,
     status: &str,
@@ -259,7 +259,7 @@ fn emit_progress(
     );
 }
 
-/// 返回下载后的文件完整路径
+/// Devuelve la ruta completa del archivo descargado
 async fn download_file(
     app: &tauri::AppHandle,
     state: &AppState,
@@ -273,33 +273,33 @@ async fn download_file(
     max_connections: u32,
     split: u32,
 ) -> Result<PathBuf, String> {
-    // 检查是否已被取消
+    // Comprobar si ya se ha cancelado
     if DOWNLOAD_CANCELLED.load(Ordering::SeqCst) {
-        return Err("下载已取消".to_string());
+        return Err("Descarga cancelada".to_string());
     }
-    // 检查是否暂停
+    // Comprobar si esta en pausa
     if DOWNLOAD_PAUSED.load(Ordering::SeqCst) {
-        return Err("下载已暂停".to_string());
+        return Err("Descarga pausada".to_string());
     }
 
     let installer_path = dir.join(filename);
     let display_label = label.unwrap_or(filename);
 
-    // 检查已有文件大小（用于断点续传时保留进度）
+    // Comprobar el tamaño del archivo existente (para conservar el progreso al reanudar)
     let existing_size = if installer_path.exists() {
         fs::metadata(&installer_path).map(|m| m.len()).unwrap_or(0)
     } else {
         0
     };
 
-    // 获取文件总大小
+    // Obtener el tamaño total del archivo
     let total_size = if known_size > 0 {
         known_size
     } else {
         let client = reqwest::Client::new();
-        // 使用 Range 请求替代 HEAD，因为部分 CDN 不支持 HEAD 或
-        // HEAD 不返回 Content-Length；Range 请求的 206 响应中
-        // Content-Range 头会包含文件总大小
+        // Se usa una petición Range en lugar de HEAD porque algunas CDN no admiten HEAD o
+        // HEAD no devuelve Content-Length; en la respuesta 206 de una petición Range
+        // la cabecera Content-Range incluye el tamaño total del archivo
         match client.get(url).header("Range", "bytes=0-0").send().await {
             Ok(resp) => {
                 if resp.status() == reqwest::StatusCode::PARTIAL_CONTENT {
@@ -310,7 +310,7 @@ async fn download_file(
                         .and_then(|v| v.parse::<u64>().ok())
                         .unwrap_or_else(|| resp.content_length().unwrap_or(0))
                 } else {
-                    // 服务器不支持 Range，回退到 Content-Length
+                    // El servidor no admite Range, se recurre a Content-Length
                     resp.content_length().unwrap_or(0)
                 }
             }
@@ -319,14 +319,14 @@ async fn download_file(
     };
 
     log::info!(
-        "开始下载: {} (url={}, total_size={} bytes, existing={} bytes)",
+        "Iniciando descarga: {} (url={}, total_size={} bytes, existing={} bytes)",
         display_label,
         url,
         total_size,
         existing_size
     );
 
-    // 恢复下载时基于已有文件大小计算初始进度，避免进度条归零
+    // Al reanudar la descarga se calcula el progreso inicial a partir del tamaño del archivo existente para evitar que la barra vuelva a cero
     let initial_pct = if total_size > 0 && existing_size > 0 {
         ((progress_offset + progress_weight * (existing_size as f64 / total_size as f64)) * 100.0)
             .min(100.0) as u32
@@ -336,17 +336,17 @@ async fn download_file(
     emit_progress(
         app,
         "downloading",
-        &format!("正在下载 {}...", display_label),
+        &format!("Descargando {}...", display_label),
         initial_pct,
         existing_size,
         total_size,
     );
 
-    // 优先使用 aria2 下载
+    // Se da prioridad a la descarga con aria2
     let aria2 = find_aria2(&state.resource_dir);
     let download_result: Result<(), String> = if let Some(aria2_path) = aria2 {
         log::info!(
-            "使用 aria2 下载: {} (max_connections={}, split={})",
+            "Descargando con aria2: {} (max_connections={}, split={})",
             aria2_path.display(),
             max_connections,
             split
@@ -369,16 +369,16 @@ async fn download_file(
         if ok {
             Ok(())
         } else if DOWNLOAD_CANCELLED.load(Ordering::SeqCst) {
-            // 取消
-            log::info!("下载已取消，不回退到内置下载器: {}", display_label);
-            Err("下载已取消".to_string())
+            // Cancelada
+            log::info!("Descarga cancelada, no se recurre al descargador integrado: {}", display_label);
+            Err("Descarga cancelada".to_string())
         } else if DOWNLOAD_PAUSED.load(Ordering::SeqCst) {
-            // 暂停
-            log::info!("下载已暂停，保留已下载部分: {}", display_label);
-            Err("下载已暂停".to_string())
+            // Pausada
+            log::info!("Descarga pausada, se conserva la parte ya descargada: {}", display_label);
+            Err("Descarga pausada".to_string())
         } else {
-            // aria2 自身失败（非暂停/取消）
-            log::info!("aria2 失败，回退到内置下载器: {}", display_label);
+            // Fallo propio de aria2 (ni pausa ni cancelación)
+            log::info!("aria2 ha fallado, se recurre al descargador integrado: {}", display_label);
             download_via_reqwest(
                 app,
                 url,
@@ -391,7 +391,7 @@ async fn download_file(
             .await
         }
     } else {
-        log::info!("未找到 aria2，使用内置下载器");
+        log::info!("No se ha encontrado aria2, se usa el descargador integrado");
         download_via_reqwest(
             app,
             url,
@@ -410,13 +410,13 @@ async fn download_file(
     emit_progress(
         app,
         "downloading",
-        &format!("{} 下载完成", display_label),
+        &format!("{} descarga completada", display_label),
         100,
         final_size,
         final_size,
     );
     log::info!(
-        "下载完成: {} ({} bytes)",
+        "Descarga completada: {} ({} bytes)",
         installer_path.display(),
         final_size
     );
@@ -424,7 +424,7 @@ async fn download_file(
     Ok(installer_path)
 }
 
-/// 使用 aria2 下载文件，返回是否成功
+/// Descarga un archivo con aria2 y devuelve si la operacion ha tenido exito
 async fn download_via_aria2(
     app: &tauri::AppHandle,
     aria2_path: &PathBuf,
@@ -439,7 +439,7 @@ async fn download_via_aria2(
     max_connections: u32,
     split: u32,
 ) -> bool {
-    // 启动 aria2 进程
+    // Iniciar el proceso aria2
     // --file-allocation=none
     // --continue=true
     // --max-connection-per-server=N
@@ -470,14 +470,14 @@ async fn download_via_aria2(
             .spawn()
     };
 
-    // 保存 aria2 进程 PID 以便暂停/取消时 kill
+    // Guardar el PID del proceso aria2 para poder matarlo al pausar/cancelar
     if let Ok(ref child) = child {
         *ARIA2_PID.lock().unwrap() = Some(child.id());
     }
 
     let mut success = false;
     if let Ok(ref mut child) = child {
-        // 启动进度监控线程
+        // Iniciar el hilo de supervision del progreso
         let app_clone = app.clone();
         let monitor_path = installer_path.clone();
         let label_owned = label.to_string();
@@ -497,13 +497,13 @@ async fn download_via_aria2(
                 if let Ok(metadata) = fs::metadata(&monitor_path) {
                     let current_size = metadata.len();
                     if current_size != last_size {
-                        // 计算组件内进度百分比
+                        // Calcular el porcentaje de progreso dentro del componente
                         let inner_pct = if total_size > 0 {
                             ((current_size as f64 / total_size as f64) * 100.0).min(100.0)
                         } else {
                             0.0
                         };
-                        // 计算总进度
+                        // Calcular el progreso total
                         let total_pct = ((progress_offset + progress_weight * inner_pct / 100.0)
                             * 100.0)
                             .min(100.0) as u32;
@@ -511,7 +511,7 @@ async fn download_via_aria2(
                             &app_clone,
                             "downloading",
                             &format!(
-                                "正在下载 {} ({:.2} MB / {:.2} MB)",
+                                "Descargando {} ({:.2} MB / {:.2} MB)",
                                 label_owned,
                                 current_size as f64 / 1024.0 / 1024.0,
                                 total_size as f64 / 1024.0 / 1024.0
@@ -526,7 +526,7 @@ async fn download_via_aria2(
             }
         });
 
-        // 等待 aria2 完成
+        // Esperar a que aria2 termine
         let exit_status = child.wait();
         running.store(false, Ordering::Relaxed);
         let _ = monitor_handle.join();
@@ -545,13 +545,13 @@ async fn download_via_aria2(
             }
             Ok(status) => {
                 log::warn!(
-                    "aria2 下载 {} 失败 (状态: {}), 回退到内置下载",
+                    "La descarga con aria2 de {} ha fallado (estado: {}), se recurre a la descarga integrada",
                     label,
                     status
                 );
             }
             Err(e) => {
-                log::warn!("aria2 等待 {} 失败: {}, 回退到内置下载", label, e);
+                log::warn!("Fallo al esperar a aria2 para {}: {}, se recurre a la descarga integrada", label, e);
             }
         }
     }
@@ -559,7 +559,7 @@ async fn download_via_aria2(
     success
 }
 
-/// 使用内置 reqwest 下载文件
+/// Descarga un archivo con el reqwest integrado
 async fn download_via_reqwest(
     app: &tauri::AppHandle,
     url: &str,
@@ -571,7 +571,7 @@ async fn download_via_reqwest(
 ) -> Result<(), String> {
     let client = reqwest::Client::new();
 
-    // 检查已存在的部分下载文件，支持断点续传
+    // Comprobar si ya existe un archivo parcial descargado para admitir la reanudación
     let existing_size = if installer_path.exists() {
         fs::metadata(installer_path).map(|m| m.len()).unwrap_or(0)
     } else {
@@ -580,10 +580,10 @@ async fn download_via_reqwest(
 
     let total_size = if total_size > 0 { total_size } else { 0 };
 
-    // 如果已有文件且大小与 total_size 一致，视为已下载完成
+    // Si el archivo ya existe y su tamaño coincide con total_size, se considera descargado por completo
     if existing_size > 0 && total_size > 0 && existing_size >= total_size {
         log::info!(
-            "文件已存在且大小匹配，跳过下载: {} ({} bytes)",
+            "El archivo ya existe y su tamaño coincide, se omite la descarga: {} ({} bytes)",
             label,
             existing_size
         );
@@ -594,9 +594,9 @@ async fn download_via_reqwest(
     let mut downloaded: u64 = 0;
 
     if existing_size > 0 {
-        // 断点续传
+        // Reanudación desde el punto de interrupcion
         log::info!(
-            "断点续传: {} 已有 {} bytes，从该位置继续下载",
+            "Reanudación: {} ya tiene {} bytes, se continua la descarga desde esa posición",
             label,
             existing_size
         );
@@ -607,20 +607,20 @@ async fn download_via_reqwest(
     let resp = request
         .send()
         .await
-        .map_err(|e| format!("下载请求失败: {}", e))?;
+        .map_err(|e| format!("Error en la petición de descarga: {}", e))?;
 
-    // 检查服务器是否支持断点续传
+    // Comprobar si el servidor admite la reanudación
     let is_partial = resp.status() == reqwest::StatusCode::PARTIAL_CONTENT;
     if existing_size > 0 && !is_partial {
-        // 服务器不支持 Range，从头下载
-        log::warn!("服务器不支持断点续传，将从头开始下载: {}", label);
+        // El servidor no admite Range, se descarga desde el principio
+        log::warn!("El servidor no admite la reanudación, se descargara desde el principio: {}", label);
         let resp = client
             .get(url)
             .send()
             .await
-            .map_err(|e| format!("下载请求失败: {}", e))?;
+            .map_err(|e| format!("Error en la petición de descarga: {}", e))?;
         if !resp.status().is_success() {
-            return Err(format!("下载失败: HTTP {}", resp.status()));
+            return Err(format!("Fallo en la descarga: HTTP {}", resp.status()));
         }
         let final_total = if total_size > 0 {
             total_size
@@ -641,13 +641,13 @@ async fn download_via_reqwest(
     }
 
     if !resp.status().is_success() && !is_partial {
-        return Err(format!("下载失败: HTTP {}", resp.status()));
+        return Err(format!("Fallo en la descarga: HTTP {}", resp.status()));
     }
 
     let effective_total = if total_size > 0 {
         total_size
     } else if is_partial {
-        // 从 Content-Range 头解析总大小
+        // Obtener el tamaño total a partir de la cabecera Content-Range
         resp.headers()
             .get("content-range")
             .and_then(|v| v.to_str().ok())
@@ -671,7 +671,7 @@ async fn download_via_reqwest(
     .await
 }
 
-/// reqwest 流式下载执行体
+/// Cuerpo de ejecución de la descarga en flujo con reqwest
 async fn download_via_reqwest_stream(
     app: &tauri::AppHandle,
     resp: reqwest::Response,
@@ -682,7 +682,7 @@ async fn download_via_reqwest_stream(
     progress_weight: f64,
     initial_downloaded: u64,
 ) -> Result<(), String> {
-    // 基于已下载大小计算初始进度，避免进度条归零
+    // Calcular el progreso inicial a partir del tamaño ya descargado para evitar que la barra vuelva a cero
     let init_pct = if total_size > 0 {
         ((progress_offset + progress_weight * (initial_downloaded as f64 / total_size as f64))
             * 100.0)
@@ -693,15 +693,15 @@ async fn download_via_reqwest_stream(
     emit_progress(
         app,
         "downloading",
-        &format!("正在下载 {}...", label),
+        &format!("Descargando {}...", label),
         init_pct,
         initial_downloaded,
         total_size,
     );
 
-    // 追加模式打开文件（支持断点续传）
-    // 使用 truncate=false 的写入模式
-    // 避免在取消后重新下载时把已删除文件重建（取消后 initial_downloaded=0 时会新建空文件）
+    // Abrir el archivo en modo de adicion (admite la reanudación)
+    // Usar el modo de escritura con truncate=false
+    // Evitar recrear un archivo ya eliminado al volver a descargar tras cancelar (si initial_downloaded=0 después de cancelar se crea un archivo vacio nuevo)
     let mut out = {
         let mut opts = fs::OpenOptions::new();
         opts.create(true).write(true);
@@ -711,13 +711,13 @@ async fn download_via_reqwest_stream(
             opts.truncate(true);
         }
         opts.open(installer_path)
-            .map_err(|e| format!("创建文件失败: {}", e))?
+            .map_err(|e| format!("No se pudo crear el archivo: {}", e))?
     };
 
-    // 确保文件指针在末尾
+    // Asegurar que el puntero del archivo este al final
     if initial_downloaded > 0 {
         out.seek(std::io::SeekFrom::End(0))
-            .map_err(|e| format!("定位文件失败: {}", e))?;
+            .map_err(|e| format!("No se pudo posicionar el archivo: {}", e))?;
     }
 
     let mut downloaded = initial_downloaded;
@@ -725,20 +725,20 @@ async fn download_via_reqwest_stream(
     let mut last_emit = std::time::Instant::now();
 
     while let Some(chunk) = stream.next().await {
-        // 检查是否取消或暂停
+        // Comprobar si se ha cancelado o pausado
         if DOWNLOAD_CANCELLED.load(Ordering::Relaxed) {
-            return Err("下载已取消".to_string());
+            return Err("Descarga cancelada".to_string());
         }
         if DOWNLOAD_PAUSED.load(Ordering::Relaxed) {
-            return Err("下载已暂停".to_string());
+            return Err("Descarga pausada".to_string());
         }
 
-        let chunk = chunk.map_err(|e| format!("下载数据失败: {}", e))?;
+        let chunk = chunk.map_err(|e| format!("Fallo al descargar los datos: {}", e))?;
         out.write_all(&chunk)
-            .map_err(|e| format!("写入文件失败: {}", e))?;
+            .map_err(|e| format!("Fallo al escribir en el archivo: {}", e))?;
         downloaded += chunk.len() as u64;
 
-        // 限制进度事件频率
+        // Limitar la frecuencia de los eventos de progreso
         if last_emit.elapsed() >= std::time::Duration::from_millis(200) {
             let inner_pct = if total_size > 0 {
                 ((downloaded as f64 / total_size as f64) * 100.0).min(100.0)
@@ -751,7 +751,7 @@ async fn download_via_reqwest_stream(
                 app,
                 "downloading",
                 &format!(
-                    "正在下载 {} ({:.2} MB / {:.2} MB)",
+                    "Descargando {} ({:.2} MB / {:.2} MB)",
                     label,
                     downloaded as f64 / 1024.0 / 1024.0,
                     total_size as f64 / 1024.0 / 1024.0
@@ -767,7 +767,7 @@ async fn download_via_reqwest_stream(
     Ok(())
 }
 
-/// 下载安装包到指定目录
+/// Descarga el paquete de instalación en la carpeta indicada
 #[tauri::command]
 pub async fn download_v4_installer(
     app: tauri::AppHandle,
@@ -777,25 +777,25 @@ pub async fn download_v4_installer(
     version: String,
     resume: bool,
 ) -> Result<String, String> {
-    // 重置下载控制标志
+    // Restablecer los indicadores de control de descarga
     DOWNLOAD_CANCELLED.store(false, Ordering::SeqCst);
     if !resume {
         DOWNLOAD_PAUSED.store(false, Ordering::SeqCst);
     }
 
     let url = if url.is_empty() {
-        return Err("安装包下载链接不能为空".to_string());
+        return Err("El enlace de descarga del paquete de instalación no puede estar vacio".to_string());
     } else {
         url
     };
-    log::info!("下载链接: {}", url);
+    log::info!("Enlace de descarga: {}", url);
 
     let dir = PathBuf::from(&save_dir);
-    fs::create_dir_all(&dir).map_err(|e| format!("无法创建下载目录: {}", e))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("No se puede crear la carpeta de descarga: {}", e))?;
 
     let config = crate::config::read_config();
 
-    // 使用版本特定文件名，避免 V4/V5 互相覆盖导致断点续传误判
+    // Usar un nombre de archivo especifico por version para evitar que V4 y V5 se sobrescriban entre si y la reanudación se evalue de forma erronea
     let filename = match version.as_str() {
         "MuMu12-V5" => "MuMu_Setup_V5.exe",
         _ => "MuMu_Setup_V4.exe",
@@ -803,13 +803,13 @@ pub async fn download_v4_installer(
 
     let save_path = dir.join(filename);
 
-    // 非 resume 时删除冲突文件，确保从零开始下载
+    // Si no es una reanudación, eliminar el archivo en conflicto para garantizar que la descarga empiece de cero
     if !resume && save_path.exists() {
         let _ = fs::remove_file(&save_path);
-        log::info!("已删除冲突文件: {}", save_path.display());
+        log::info!("Archivo en conflicto eliminado: {}", save_path.display());
     }
 
-    // 跟踪部分下载文件，供取消时删除
+    // Registrar el archivo parcial para poder eliminarlo al cancelar
     PARTIAL_FILES.lock().unwrap().push(save_path.clone());
 
     let installer_path = download_file(
@@ -827,18 +827,18 @@ pub async fn download_v4_installer(
     )
     .await;
 
-    // 下载完成后从跟踪列表移除
+    // Quitar el archivo de la lista de seguimiento una vez completada la descarga
     PARTIAL_FILES.lock().unwrap().retain(|f| f != &save_path);
 
     match installer_path {
         Ok(path) => Ok(path.to_string_lossy().to_string()),
         Err(e) => {
-            // 取消下载时删除已下载的不完整文件
+            // Al cancelar la descarga, eliminar el archivo incompleto ya descargado
             if DOWNLOAD_CANCELLED.load(Ordering::SeqCst) && save_path.exists() {
                 match fs::remove_file(&save_path) {
-                    Ok(()) => log::info!("取消下载，已删除不完整文件: {}", save_path.display()),
+                    Ok(()) => log::info!("Descarga cancelada, archivo incompleto eliminado: {}", save_path.display()),
                     Err(err) => {
-                        log::warn!("取消下载，删除文件失败: {} - {}", save_path.display(), err)
+                        log::warn!("Descarga cancelada, no se pudo eliminar el archivo: {} - {}", save_path.display(), err)
                     }
                 }
             }
@@ -847,7 +847,7 @@ pub async fn download_v4_installer(
     }
 }
 
-/// V6 下载所有组件安装包到指定目录
+/// V6: descarga todos los paquetes de instalación de los componentes en la carpeta indicada
 #[tauri::command]
 pub async fn download_v6_installer(
     app: tauri::AppHandle,
@@ -856,17 +856,17 @@ pub async fn download_v6_installer(
     components_json: String,
     resume: bool,
 ) -> Result<String, String> {
-    // 重置下载控制标志
+    // Restablecer los indicadores de control de descarga
     DOWNLOAD_CANCELLED.store(false, Ordering::SeqCst);
     if !resume {
         DOWNLOAD_PAUSED.store(false, Ordering::SeqCst);
     }
 
     let components: Vec<V6Component> =
-        serde_json::from_str(&components_json).map_err(|e| format!("解析组件列表失败: {}", e))?;
+        serde_json::from_str(&components_json).map_err(|e| format!("No se pudo analizar la lista de componentes: {}", e))?;
 
     let dir = PathBuf::from(&save_dir);
-    fs::create_dir_all(&dir).map_err(|e| format!("无法创建下载目录: {}", e))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("No se puede crear la carpeta de descarga: {}", e))?;
 
     let config = crate::config::read_config();
 
@@ -874,9 +874,9 @@ pub async fn download_v6_installer(
     let mut downloaded_files = Vec::new();
 
     for (i, comp) in components.iter().enumerate() {
-        // 检查是否取消
+        // Comprobar si se ha cancelado
         if DOWNLOAD_CANCELLED.load(Ordering::SeqCst) {
-            return Err("下载已取消".to_string());
+            return Err("Descarga cancelada".to_string());
         }
 
         let url = &comp.link;
@@ -889,44 +889,44 @@ pub async fn download_v6_installer(
         let installer_path = dir.join(&filename);
 
         log::info!(
-            "下载 V6 组件 [{}/{}]: {} -> {}",
+            "Descargando componente V6 [{}/{}]: {} -> {}",
             i + 1,
             total_components,
             comp.name,
             filename
         );
 
-        // 非 resume 时，已存在的文件也要删除
+        // Si no es una reanudación, también hay que eliminar los archivos que ya existan
         if !resume && installer_path.exists() {
             let _ = fs::remove_file(&installer_path);
-            log::info!("已删除冲突文件: {}", installer_path.display());
+            log::info!("Archivo en conflicto eliminado: {}", installer_path.display());
         }
 
-        // resume 时，已存在的文件跳过下载
+        // Al reanudar, se omite la descarga de los archivos que ya existan
         if resume && installer_path.exists() {
             let existing_size = fs::metadata(&installer_path).map(|m| m.len()).unwrap_or(0);
             if existing_size > 0 && comp.size > 0 && existing_size >= comp.size as u64 {
                 log::info!(
-                    "组件 {} 已存在且大小匹配，跳过下载: {}",
+                    "El componente {} ya existe y su tamaño coincide, se omite la descarga: {}",
                     comp.name,
                     installer_path.display()
                 );
                 downloaded_files.push(installer_path.to_string_lossy().to_string());
                 continue;
             }
-            // 大小不匹配，继续下载（断点续传）
+            // El tamaño no coincide, se continua la descarga (reanudación)
             log::info!(
-                "组件 {} 部分下载，继续断点续传: {} (已有 {} bytes)",
+                "El componente {} esta descargado en parte, se reanuda la descarga: {} ({} bytes existentes)",
                 comp.name,
                 installer_path.display(),
                 existing_size
             );
         }
 
-        // 跟踪部分下载文件，供取消时删除
+        // Registrar el archivo parcial para poder eliminarlo al cancelar
         PARTIAL_FILES.lock().unwrap().push(installer_path.clone());
 
-        // 每个组件占总进度的 1/total_components
+        // Cada componente representa 1/total_components del progreso total
         let weight = 1.0 / total_components as f64;
         let offset = i as f64 / total_components as f64;
 
@@ -947,24 +947,24 @@ pub async fn download_v6_installer(
 
         match path {
             Ok(p) => {
-                // 下载完成后从跟踪列表移除
+                // Quitar el archivo de la lista de seguimiento una vez completada la descarga
                 PARTIAL_FILES
                     .lock()
                     .unwrap()
                     .retain(|f| f != &installer_path);
                 downloaded_files.push(p.to_string_lossy().to_string());
-                log::info!("组件 {} 下载完成: {}", comp.name, p.display());
+                log::info!("Descarga del componente {} completada: {}", comp.name, p.display());
             }
             Err(e) => {
-                // 取消下载时删除所有已下载的不完整文件
+                // Al cancelar la descarga, eliminar todos los archivos incompletos ya descargados
                 if DOWNLOAD_CANCELLED.load(Ordering::SeqCst) {
                     let files = PARTIAL_FILES.lock().unwrap().clone();
                     for f in &files {
                         if f.exists() {
                             match fs::remove_file(f) {
-                                Ok(()) => log::info!("取消下载，已删除不完整文件: {}", f.display()),
+                                Ok(()) => log::info!("Descarga cancelada, archivo incompleto eliminado: {}", f.display()),
                                 Err(err) => {
-                                    log::warn!("取消下载，删除文件失败: {} - {}", f.display(), err)
+                                    log::warn!("Descarga cancelada, no se pudo eliminar el archivo: {} - {}", f.display(), err)
                                 }
                             }
                         }
@@ -976,12 +976,12 @@ pub async fn download_v6_installer(
         }
     }
 
-    emit_progress(&app, "downloading", "所有组件下载完成", 100, 0, 0);
+    emit_progress(&app, "downloading", "Descarga de todos los componentes completada", 100, 0, 0);
 
     Ok(serde_json::to_string(&downloaded_files).unwrap_or_default())
 }
 
-/// V6 静默安装
+/// V6: instalación silenciosa
 #[tauri::command]
 pub async fn install_v6_setup(
     app: tauri::AppHandle,
@@ -991,48 +991,48 @@ pub async fn install_v6_setup(
     product_version: String,
 ) -> Result<String, String> {
     let components: Vec<V6Component> =
-        serde_json::from_str(&components_json).map_err(|e| format!("解析组件列表失败: {}", e))?;
+        serde_json::from_str(&components_json).map_err(|e| format!("No se pudo analizar la lista de componentes: {}", e))?;
     let downloaded_files: Vec<String> = serde_json::from_str(&downloaded_files_json)
-        .map_err(|e| format!("解析文件列表失败: {}", e))?;
+        .map_err(|e| format!("No se pudo analizar la lista de archivos: {}", e))?;
 
-    fs::create_dir_all(&install_dir).map_err(|e| format!("无法创建安装目录: {}", e))?;
+    fs::create_dir_all(&install_dir).map_err(|e| format!("No se puede crear la carpeta de instalación: {}", e))?;
 
-    // 生成统一的 txn_id
+    // Generar un txn_id unico
     let txn_id = uuid::Uuid::new_v4().to_string();
 
     log::info!(
-        "V6 安装开始: txn_id={}, product_version={}, install_dir={}",
+        "Inicio de la instalación V6: txn_id={}, product_version={}, install_dir={}",
         txn_id,
         product_version,
         install_dir
     );
     log::info!(
-        "V6 组件数量: {}, 文件数量: {}",
+        "V6 número de componentes: {}, número de archivos: {}",
         components.len(),
         downloaded_files.len()
     );
 
-    // 将组件名匹配到下载的文件路径
+    // Asociar el nombre de cada componente con la ruta del archivo descargado
     let mut component_file_map: Vec<(&V6Component, &String)> = Vec::new();
     for comp in &components {
         let comp_name_lower = comp.name.to_lowercase();
         let matched = downloaded_files.iter().find(|f| {
             let f_lower = f.to_lowercase();
-            // 匹配文件名中包含组件名（小写）
+            // Buscar coincidencias con el nombre del componente (en minusculas) dentro del nombre del archivo
             f_lower.contains(&comp_name_lower) || f_lower.contains(&format!("-{}", comp_name_lower))
         });
         if let Some(file_path) = matched {
             component_file_map.push((comp, file_path));
         } else {
-            log::warn!("未找到组件 {} 的安装文件，跳过", comp.name);
+            log::warn!("No se ha encontrado el archivo de instalación del componente {}, se omite", comp.name);
         }
     }
 
     if component_file_map.is_empty() {
-        return Err("没有找到任何可用的组件安装文件".to_string());
+        return Err("No se ha encontrado ningun archivo de instalación de componente disponible".to_string());
     }
 
-    let total_steps = component_file_map.len() * 2; // install_prepare + commit 各一次
+    let total_steps = component_file_map.len() * 2; // install_prepare + commit, una vez cada uno
     let mut current_step = 0u32;
 
     // install_prepare
@@ -1043,11 +1043,11 @@ pub async fn install_v6_setup(
 
         current_step += 1;
         let action_msg = format!(
-            "安装组件 {}/{}: {} (install_prepare)",
+            "Instalando componente {}/{}: {} (install_prepare)",
             current_step, total_steps, comp.name
         );
         log::info!("{}", action_msg);
-        log::info!("命令行: \"{}\" /from_orchestrator=1 /action=install_prepare /txn_id={} /silent=1 /product_version={} /auto_start=false /fchannel=nochannel-mumu12 /auto_run=false /D={}", file_path, txn_id_arg, product_version_arg, install_dir_arg);
+        log::info!("Línea de comandos: \"{}\" /from_orchestrator=1 /action=install_prepare /txn_id={} /silent=1 /product_version={} /auto_start=false /fchannel=nochannel-mumu12 /auto_run=false /D={}", file_path, txn_id_arg, product_version_arg, install_dir_arg);
 
         let _ = app.emit(
             "download-progress",
@@ -1075,7 +1075,7 @@ pub async fn install_v6_setup(
                 .raw_arg(format!("/D={}", install_dir_arg))
                 .creation_flags(CREATE_NO_WINDOW)
                 .output()
-                .map_err(|e| format!("执行安装程序失败: {}", e))?
+                .map_err(|e| format!("No se pudo ejecutar el programa de instalación: {}", e))?
         };
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
@@ -1084,18 +1084,18 @@ pub async fn install_v6_setup(
         if !output.status.success() {
             let exit_code = output.status.code().unwrap_or(-1);
             log::error!(
-                "组件 {} install_prepare 失败 (exit: {}): stdout={}, stderr={}",
+                "Fallo de install_prepare del componente {} (exit: {}): stdout={}, stderr={}",
                 comp.name,
                 exit_code,
                 stdout,
                 stderr
             );
             return Err(format!(
-                "组件 {} 安装失败 (exit: {})\n{}\n{}",
+                "Fallo en la instalación del componente {} (exit: {})\n{}\n{}",
                 comp.name, exit_code, stdout, stderr
             ));
         }
-        log::info!("组件 {} install_prepare 成功", comp.name);
+        log::info!("install_prepare del componente {} correcto", comp.name);
     }
 
     // commit
@@ -1106,11 +1106,11 @@ pub async fn install_v6_setup(
 
         current_step += 1;
         let action_msg = format!(
-            "安装组件 {}/{}: {} (commit)",
+            "Instalando componente {}/{}: {} (commit)",
             current_step, total_steps, comp.name
         );
         log::info!("{}", action_msg);
-        log::info!("命令行: \"{}\" /from_orchestrator=1 /action=commit /txn_id={} /silent=1 /product_version={} /auto_start=false /fchannel=nochannel-mumu12 /auto_run=false /D={}", file_path, txn_id_arg, product_version_arg, install_dir_arg);
+        log::info!("Línea de comandos: \"{}\" /from_orchestrator=1 /action=commit /txn_id={} /silent=1 /product_version={} /auto_start=false /fchannel=nochannel-mumu12 /auto_run=false /D={}", file_path, txn_id_arg, product_version_arg, install_dir_arg);
 
         let _ = app.emit(
             "download-progress",
@@ -1138,7 +1138,7 @@ pub async fn install_v6_setup(
                 .raw_arg(format!("/D={}", install_dir_arg))
                 .creation_flags(CREATE_NO_WINDOW)
                 .output()
-                .map_err(|e| format!("执行安装程序失败: {}", e))?
+                .map_err(|e| format!("No se pudo ejecutar el programa de instalación: {}", e))?
         };
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
@@ -1147,51 +1147,51 @@ pub async fn install_v6_setup(
         if !output.status.success() {
             let exit_code = output.status.code().unwrap_or(-1);
             log::error!(
-                "组件 {} commit 失败 (exit: {}): stdout={}, stderr={}",
+                "Fallo de commit del componente {} (exit: {}): stdout={}, stderr={}",
                 comp.name,
                 exit_code,
                 stdout,
                 stderr
             );
             return Err(format!(
-                "组件 {} commit 失败 (exit: {})\n{}\n{}",
+                "Fallo de commit del componente {} (exit: {})\n{}\n{}",
                 comp.name, exit_code, stdout, stderr
             ));
         }
-        log::info!("组件 {} commit 成功", comp.name);
+        log::info!("commit del componente {} correcto", comp.name);
     }
 
     let _ = app.emit(
         "download-progress",
         serde_json::json!({
             "status": "completed",
-            "action": "安装完成",
+            "action": "Instalación completada",
             "percent": 100,
             "downloaded": 0,
             "total": 0
         }),
     );
 
-    log::info!("V6 安装完成: {}", install_dir);
+    log::info!("Instalación V6 completada: {}", install_dir);
 
-    // 删除安装包
+    // Eliminar el paquete de instalación
     let config = crate::config::read_config();
     if config.auto_delete_installer {
         for file_path in &downloaded_files {
             let p = PathBuf::from(file_path);
             if p.exists() {
                 match fs::remove_file(&p) {
-                    Ok(()) => log::info!("安装包已删除: {}", file_path),
-                    Err(e) => log::warn!("删除安装包失败: {} - {}", file_path, e),
+                    Ok(()) => log::info!("Paquete de instalación eliminado: {}", file_path),
+                    Err(e) => log::warn!("No se pudo eliminar el paquete de instalación: {} - {}", file_path, e),
                 }
             }
         }
     }
 
-    Ok(format!("V6 安装成功\n安装目录: {}", install_dir))
+    Ok(format!("Instalación V6 correcta\nCarpeta de instalación: {}", install_dir))
 }
 
-/// 静默安装 Setup.exe /S /D=install_path
+/// Instalación silenciosa Setup.exe /S /D=install_path
 #[tauri::command]
 pub async fn install_v4_setup(
     app: tauri::AppHandle,
@@ -1200,27 +1200,27 @@ pub async fn install_v4_setup(
 ) -> Result<String, String> {
     let installer = PathBuf::from(&installer_path);
     if !installer.exists() {
-        return Err(format!("安装包不存在: {}", installer_path));
+        return Err(format!("El paquete de instalación no existe: {}", installer_path));
     }
 
-    fs::create_dir_all(&install_dir).map_err(|e| format!("无法创建安装目录: {}", e))?;
+    fs::create_dir_all(&install_dir).map_err(|e| format!("No se puede crear la carpeta de instalación: {}", e))?;
 
-    log::info!("开始静默安装: {} -> {}", installer_path, install_dir);
-    log::info!("安装命令行: \"{}\" /S /D={}", installer_path, install_dir);
+    log::info!("Iniciando la instalación silenciosa: {} -> {}", installer_path, install_dir);
+    log::info!("Línea de comandos de instalación: \"{}\" /S /D={}", installer_path, install_dir);
     let _ = app.emit(
         "download-progress",
         serde_json::json!({
             "status": "installing",
-            "action": "正在静默安装，请稍候...",
+            "action": "Instalando en modo silencioso, espere por favor...",
             "percent": 0,
             "downloaded": 0,
             "total": 0
         }),
     );
 
-    // NSIS 安装器要求 /D= 必须是最后一个参数，且路径不能加引号。
-    // std::process::Command::arg() 会自动给含空格的参数加引号，破坏 NSIS 参数解析。
-    // 使用 raw_arg() 直接传递原始参数字符串，避免引号问题。
+    // El instalador NSIS exige que /D= sea el último parametro y que la ruta no lleve comillas.
+    // std::process::Command::arg() anade comillas automaticamente a los parametros con espacios, lo que rompe el análisis de parametros de NSIS.
+    // Se usa raw_arg() para pasar la cadena de parametros original directamente y evitar problemas con las comillas.
     let output = {
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -1229,7 +1229,7 @@ pub async fn install_v4_setup(
             .raw_arg(format!("/D={}", install_dir))
             .creation_flags(CREATE_NO_WINDOW)
             .output()
-            .map_err(|e| format!("执行安装程序失败: {}", e))?
+            .map_err(|e| format!("No se pudo ejecutar el programa de instalación: {}", e))?
     };
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
@@ -1240,29 +1240,29 @@ pub async fn install_v4_setup(
             "download-progress",
             serde_json::json!({
                 "status": "completed",
-                "action": "安装完成",
+                "action": "Instalación completada",
                 "percent": 100,
                 "downloaded": 0,
                 "total": 0
             }),
         );
-        log::info!("安装成功: {}", install_dir);
+        log::info!("Instalación correcta: {}", install_dir);
         if !stdout.is_empty() {
-            log::info!("安装 stdout: {}", stdout);
+            log::info!("stdout de la instalación: {}", stdout);
         }
-        // 安装成功后，根据配置决定是否删除安装包
+        // Tras una instalación correcta, la configuración decide si se elimina el paquete de instalación
         let config = crate::config::read_config();
         if config.auto_delete_installer && installer.exists() {
             match fs::remove_file(&installer) {
-                Ok(()) => log::info!("安装包已删除: {}", installer_path),
-                Err(e) => log::warn!("删除安装包失败: {} - {}", installer_path, e),
+                Ok(()) => log::info!("Paquete de instalación eliminado: {}", installer_path),
+                Err(e) => log::warn!("No se pudo eliminar el paquete de instalación: {} - {}", installer_path, e),
             }
         }
-        Ok(format!("安装成功\n安装目录: {}\n{}", install_dir, stdout))
+        Ok(format!("Instalación correcta\nCarpeta de instalación: {}\n{}", install_dir, stdout))
     } else {
         let exit_code = output.status.code().unwrap_or(-1);
         log::error!(
-            "安装失败 (exit: {}): stdout={}, stderr={}",
+            "Fallo en la instalación (exit: {}): stdout={}, stderr={}",
             exit_code,
             stdout,
             stderr
@@ -1271,20 +1271,20 @@ pub async fn install_v4_setup(
             "download-progress",
             serde_json::json!({
                 "status": "error",
-                "action": format!("安装失败 (exit: {})", exit_code),
+                "action": format!("Fallo en la instalación (exit: {})", exit_code),
                 "percent": 0,
                 "downloaded": 0,
                 "total": 0
             }),
         );
         Err(format!(
-            "安装失败 (exit: {})\n{}\n{}",
+            "Fallo en la instalación (exit: {})\n{}\n{}",
             exit_code, stdout, stderr
         ))
     }
 }
 
-/// 获取 V4 下载链接
+/// Obtiene el enlace de descarga de V4
 async fn fetch_download_url_v4_inner() -> Result<String, String> {
     let uuid = uuid::Uuid::new_v4();
     let params = format!(
@@ -1299,18 +1299,18 @@ async fn fetch_download_url_v4_inner() -> Result<String, String> {
         .body(params)
         .send()
         .await
-        .map_err(|e| format!("请求失败: {}", e))?;
+        .map_err(|e| format!("Fallo en la petición: {}", e))?;
 
     let body = resp
         .text()
         .await
-        .map_err(|e| format!("读取响应失败: {}", e))?;
+        .map_err(|e| format!("No se pudo leer la respuesta: {}", e))?;
     let download_resp: DownloadResponse =
-        serde_json::from_str(&body).map_err(|e| format!("解析响应失败: {}", e))?;
+        serde_json::from_str(&body).map_err(|e| format!("No se pudo analizar la respuesta: {}", e))?;
 
     if download_resp.errcode != 100 {
         return Err(format!(
-            "API返回错误: {} - {}",
+            "La API ha devuelto un error: {} - {}",
             download_resp.errcode, download_resp.errmsg
         ));
     }
@@ -1319,12 +1319,12 @@ async fn fetch_download_url_v4_inner() -> Result<String, String> {
         .data
         .and_then(|d| d.mumu)
         .map(|m| m.link)
-        .ok_or_else(|| "响应中未找到下载链接".to_string())?;
+        .ok_or_else(|| "No se ha encontrado el enlace de descarga en la respuesta".to_string())?;
 
     Ok(link)
 }
 
-/// 获取 V5 下载链接
+/// Obtiene el enlace de descarga de V5
 async fn fetch_download_url_v5_inner() -> Result<String, String> {
     let uuid = uuid::Uuid::new_v4();
     let random_suffix = uuid
@@ -1347,18 +1347,18 @@ async fn fetch_download_url_v5_inner() -> Result<String, String> {
         .body(params)
         .send()
         .await
-        .map_err(|e| format!("请求失败: {}", e))?;
+        .map_err(|e| format!("Fallo en la petición: {}", e))?;
 
     let body = resp
         .text()
         .await
-        .map_err(|e| format!("读取响应失败: {}", e))?;
+        .map_err(|e| format!("No se pudo leer la respuesta: {}", e))?;
     let download_resp: DownloadResponse =
-        serde_json::from_str(&body).map_err(|e| format!("解析响应失败: {}", e))?;
+        serde_json::from_str(&body).map_err(|e| format!("No se pudo analizar la respuesta: {}", e))?;
 
     if download_resp.errcode != 100 {
         return Err(format!(
-            "API返回错误: {} - {}",
+            "La API ha devuelto un error: {} - {}",
             download_resp.errcode, download_resp.errmsg
         ));
     }
@@ -1367,12 +1367,12 @@ async fn fetch_download_url_v5_inner() -> Result<String, String> {
         .data
         .and_then(|d| d.mumu)
         .map(|m| m.link)
-        .ok_or_else(|| "响应中未找到下载链接".to_string())?;
+        .ok_or_else(|| "No se ha encontrado el enlace de descarga en la respuesta".to_string())?;
 
     Ok(link)
 }
 
-/// 内部函数
+/// Funcion interna
 async fn fetch_download_url_v6_inner() -> Result<String, String> {
     let uuid_val = uuid::Uuid::new_v4();
     let random_suffix = uuid_val
@@ -1395,30 +1395,30 @@ async fn fetch_download_url_v6_inner() -> Result<String, String> {
         .body(params)
         .send()
         .await
-        .map_err(|e| format!("请求失败: {}", e))?;
+        .map_err(|e| format!("Fallo en la petición: {}", e))?;
 
     let body = resp
         .text()
         .await
-        .map_err(|e| format!("读取响应失败: {}", e))?;
+        .map_err(|e| format!("No se pudo leer la respuesta: {}", e))?;
     let download_resp: V6DownloadResponse =
-        serde_json::from_str(&body).map_err(|e| format!("解析响应失败: {}", e))?;
+        serde_json::from_str(&body).map_err(|e| format!("No se pudo analizar la respuesta: {}", e))?;
 
     if download_resp.errcode != 100 {
         return Err(format!(
-            "API返回错误: {} - {}",
+            "La API ha devuelto un error: {} - {}",
             download_resp.errcode, download_resp.errmsg
         ));
     }
 
     let data = download_resp
         .data
-        .ok_or_else(|| "响应中未找到data".to_string())?;
+        .ok_or_else(|| "No se ha encontrado data en la respuesta".to_string())?;
     let version = data.version.clone().unwrap_or_default();
     let components = data.components.clone().unwrap_or_default();
     let default_engine = data.default_download_engine.clone().unwrap_or_default();
 
-    // 返回组件列表和版本信息
+    // Devolver la lista de componentes y la información de version
     let result = serde_json::json!({
         "version": version,
         "components": components,

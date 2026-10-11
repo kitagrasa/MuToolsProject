@@ -15,21 +15,21 @@ pub struct MuMuInfo {
     pub errors: Vec<String>,
 }
 
-/// 获取 %APPDATA% 路径
+/// Obtiene la ruta %APPDATA%
 fn get_appdata_dir() -> Result<PathBuf, String> {
     std::env::var("APPDATA")
         .map(PathBuf::from)
-        .map_err(|e| format!("无法获取 APPDATA 环境变量: {}", e))
+        .map_err(|e| format!("No se pudo obtener la variable de entorno APPDATA: {}", e))
 }
 
-/// 尝试读取 install_config.json 获取版本和渠道信息
-/// 返回 (version, channel, major_version, appdata_subdir)
+/// Intenta leer install_config.json para obtener la versión y el canal
+/// Devuelve (version, channel, major_version, appdata_subdir)
 fn read_install_config() -> Result<(String, String, String, String), String> {
     let appdata = get_appdata_dir()?;
 
-    // V5 路径
+    // Ruta V5
     let v5_config = appdata.join("Netease").join("MuMuPlayer").join("install_config.json");
-    // V4 路径
+    // Ruta V4
     let v4_config = appdata.join("Netease").join("MuMuPlayer-12.0").join("install_config.json");
 
     let mut errors = Vec::new();
@@ -56,30 +56,30 @@ fn read_install_config() -> Result<(String, String, String, String), String> {
                                 let major = parse_major_version(ver);
                                 return Ok((ver.clone(), channel.unwrap_or_default(), major, label.to_string()));
                             } else {
-                                errors.push(format!("{} install_config.json 中未找到 version 字段", label));
+                                errors.push(format!("No se encontró el campo version en {} install_config.json", label));
                             }
                         }
                         Err(e) => {
-                            errors.push(format!("{} install_config.json JSON 解析失败: {}", label, e));
+                            errors.push(format!("Error al analizar el JSON de {} install_config.json: {}", label, e));
                         }
                     }
                 }
                 Err(e) => {
-                    errors.push(format!("{} install_config.json 读取失败: {}", label, e));
+                    errors.push(format!("Error al leer {} install_config.json: {}", label, e));
                 }
             }
         }
     }
 
     Err(format!(
-        "无法读取 install_config.json。尝试了 V5({}) 和 V4({})。错误: {}",
+        "No se pudo leer install_config.json. Se probaron V5({}) y V4({}). Errores: {}",
         v5_config.display(),
         v4_config.display(),
         errors.join("; ")
     ))
 }
 
-/// 解析大版本号
+/// Analiza el número de versión principal
 fn parse_major_version(version: &str) -> String {
     let first = version.chars().next().unwrap_or('0');
     if first == 'V' || first == 'v' {
@@ -89,66 +89,66 @@ fn parse_major_version(version: &str) -> String {
     }
 }
 
-/// 去除字符串两端的引号
+/// Elimina las comillas de los extremos de la cadena
 fn trim_quotes(s: &str) -> String {
     s.trim_matches('"').to_string()
 }
 
-/// 从 UninstallString 解析安装根目录
-/// 例如 "D:\Program Files\Netease\MuMu\uninstall.exe" -> "D:\Program Files\Netease\MuMu"
+/// Obtiene el directorio raíz de instalación a partir de UninstallString
+/// Por ejemplo "D:\Program Files\Netease\MuMu\uninstall.exe" -> "D:\Program Files\Netease\MuMu"
 fn parse_install_dir(uninstall_string: &str) -> Option<String> {
     let path = trim_quotes(uninstall_string);
     let path = PathBuf::from(&path);
     path.parent().map(|p| p.to_string_lossy().to_string())
 }
 
-/// 读取注册表信息
+/// Lee la información del registro
 /// major_version_hint
-/// 返回 (install_dir, uninstall_string, display_version, registry_key_path)
+/// Devuelve (install_dir, uninstall_string, display_version, registry_key_path)
 fn read_registry(major_version_hint: &str) -> Result<(Option<String>, Option<String>, Option<String>, String), String> {
     use winreg::enums::*;
     use winreg::RegKey;
 
-    // V5 注册表路径
+    // Ruta del registro para V5
     let v5_key = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MuMuPlayer";
-    // V4 注册表路径
+    // Ruta del registro para V4
     let v4_key = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MuMuPlayer-12.0";
 
     let mut errors = Vec::new();
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
 
-    // 根据大版本号决定优先顺序
+    // El orden de prioridad depende del número de versión principal
     let try_keys: Vec<(&str, &str)> = if major_version_hint.starts_with('5') || major_version_hint.starts_with('6') {
         vec![("V5", v5_key), ("V4", v4_key)]
     } else if major_version_hint.starts_with('4') {
         vec![("V4", v4_key), ("V5", v5_key)]
     } else {
-        // 未知版本，V5 优先
+        // Versión desconocida, se da prioridad a V5
         vec![("V5", v5_key), ("V4", v4_key)]
     };
 
     for (label, subkey) in &try_keys {
-        // 尝试 64 位视图
+        // Intenta la vista de 64 bits
         match hklm.open_subkey_with_flags(subkey, KEY_READ | KEY_WOW64_64KEY) {
             Ok(key) => {
                 return Ok(read_registry_values(&key, subkey));
             }
             Err(e) => {
-                errors.push(format!("{}(64位) 注册表打开失败: {}", label, e));
+                errors.push(format!("Error al abrir el registro de {}(64 bits): {}", label, e));
             }
         }
-        // 尝试 32 位视图
+        // Intenta la vista de 32 bits
         match hklm.open_subkey_with_flags(subkey, KEY_READ | KEY_WOW64_32KEY) {
             Ok(key) => {
                 return Ok(read_registry_values(&key, subkey));
             }
             Err(e) => {
-                errors.push(format!("{}(32位) 注册表打开失败: {}", label, e));
+                errors.push(format!("Error al abrir el registro de {}(32 bits): {}", label, e));
             }
         }
     }
 
-    Err(format!("所有注册表路径均无法读取。错误: {}", errors.join("; ")))
+    Err(format!("No se pudo leer ninguna ruta del registro. Errores: {}", errors.join("; ")))
 }
 
 fn read_registry_values(key: &winreg::RegKey, key_path: &str) -> (Option<String>, Option<String>, Option<String>, String) {
@@ -169,7 +169,7 @@ fn read_registry_values(key: &winreg::RegKey, key_path: &str) -> (Option<String>
     )
 }
 
-/// 获取 MuMuManager.exe 路径
+/// Obtiene la ruta de MuMuManager.exe
 fn get_mumu_manager_path(install_dir: &str, major_version: &str) -> Option<String> {
     let base = PathBuf::from(install_dir);
 
@@ -178,11 +178,11 @@ fn get_mumu_manager_path(install_dir: &str, major_version: &str) -> Option<Strin
     let candidates: Vec<PathBuf> = if major_version.starts_with('5') || major_version.starts_with('6') {
         vec![base.join("nx_main").join("MuMuManager.exe")]
     } else {
-        // 4.x 或默认
+        // 4.x o predeterminado
         vec![base.join("shell").join("MuMuManager.exe")]
     };
 
-    // 也尝试另一个路径作为备选
+    // También se prueba la otra ruta como alternativa
     let mut all_candidates = candidates.clone();
     if major_version.starts_with('5') || major_version.starts_with('6') {
         all_candidates.push(base.join("shell").join("MuMuManager.exe"));
@@ -213,7 +213,7 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
         }
         Err(e) => {
             errors.push(e);
-            info.errors.push(format!("APPDATA 获取失败: {}", errors.last().unwrap()));
+            info.errors.push(format!("Error al obtener APPDATA: {}", errors.last().unwrap()));
             None
         }
     };
@@ -226,12 +226,12 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
             info.channel = Some(channel);
             info.major_version = Some(major.clone());
             major_version = major;
-            log::info!("从 {} install_config.json 读取到版本: {}, 渠道: {}", label, info.full_version.as_deref().unwrap_or("?"), info.channel.as_deref().unwrap_or("?"));
+            log::info!("Versión leída de {} install_config.json: {}, canal: {}", label, info.full_version.as_deref().unwrap_or("?"), info.channel.as_deref().unwrap_or("?"));
         }
         Err(e) => {
             errors.push(e.clone());
-            info.errors.push(format!("install_config.json 读取失败: {}", e));
-            log::warn!("读取 install_config.json 失败: {}", e);
+            info.errors.push(format!("Error al leer install_config.json: {}", e));
+            log::warn!("Error al leer install_config.json: {}", e);
         }
     }
 
@@ -242,7 +242,7 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
             info.uninstall_string = uninstall_string;
             info.registry_key = Some(registry_path.clone());
 
-            // 如果 install_config.json 没读到版本，用注册表的 DisplayVersion
+            // Si no se obtuvo la versión de install_config.json, se usa DisplayVersion del registro
             if info.full_version.is_none() {
                 info.full_version = display_version.clone();
             }
@@ -256,7 +256,7 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
                 }
             }
 
-            log::info!("从注册表路径({})读取: 安装目录={:?}", registry_path, info.install_dir);
+            log::info!("Leído de la ruta del registro ({}): directorio de instalación={:?}", registry_path, info.install_dir);
 
             // Step
             if let Some(ref install_dir) = info.install_dir {
@@ -264,7 +264,7 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
                 if mumu_path.is_some() {
                     info.mumu_manager_path = mumu_path;
                 } else {
-                    let msg = "请确认版本不低于 4.0.0.3179".to_string();
+                    let msg = "Comprueba que la versión sea 4.0.0.3179 o superior".to_string();
                     info.errors.push(msg.clone());
                     log::warn!("{}", msg);
                 }
@@ -272,12 +272,12 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
         }
         Err(e) => {
             errors.push(e.clone());
-            info.errors.push(format!("注册表读取失败: {}", e));
-            log::warn!("读取注册表失败: {}", e);
+            info.errors.push(format!("Error al leer el registro: {}", e));
+            log::warn!("Error al leer el registro: {}", e);
         }
     }
 
-    // 如果注册表没读到安装目录，但有大版本号，尝试用默认路径
+    // Si el registro no devolvió el directorio de instalación, pero hay número de versión principal, se prueba la ruta predeterminada
     if info.install_dir.is_none() && !major_version.is_empty() {
         let default_dir = if major_version.starts_with('5') || major_version.starts_with('6') {
             r"D:\Program Files\Netease\MuMu"
@@ -289,7 +289,7 @@ pub fn get_mumu_info() -> Result<MuMuInfo, String> {
             info.install_dir = Some(default_dir.to_string());
             let mumu_path = get_mumu_manager_path(default_dir, &major_version);
             info.mumu_manager_path = mumu_path;
-            log::info!("使用默认安装目录: {}", default_dir);
+            log::info!("Se usa el directorio de instalación predeterminado: {}", default_dir);
         }
     }
 
